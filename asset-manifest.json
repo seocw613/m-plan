@@ -1,0 +1,10 @@
+{
+  "files": {
+    "main.js": "/m-plan/static/js/main.decea1ba.js",
+    "index.html": "/m-plan/index.html",
+    "main.decea1ba.js.map": "/m-plan/static/js/main.decea1ba.js.map"
+  },
+  "entrypoints": [
+    "static/js/main.decea1ba.js"
+  ]
+}
