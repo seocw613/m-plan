@@ -5,10 +5,14 @@ import { getFirestore } from "firebase/firestore";
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
+// API key
+const config = require("../config");
+const apiKey = config.firebaseKey;
+
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: "AIzaSyCbONS6lO-mkusAog02wIkNOxOSHgmvQkc",
+  apiKey: firebaseKey,
   authDomain: "m-plan-ca6db.firebaseapp.com",
   projectId: "m-plan-ca6db",
   storageBucket: "m-plan-ca6db.appspot.com",
