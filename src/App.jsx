@@ -1,6 +1,6 @@
 import { styled, createGlobalStyle } from "styled-components";
 import { reset } from "styled-reset";
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { createHashRouter, RouterProvider } from "react-router-dom";
 import FoodDetail from ".//pages/food-detail.jsx";
 import FoodList from ".//pages/food-list.jsx";
 
@@ -25,7 +25,7 @@ const GlobalStyle = createGlobalStyle`
   }
 `;
 
-const router = createBrowserRouter([
+const router = createHashRouter([
   {
     path: "/",
     element: <FoodList />,
