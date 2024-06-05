@@ -76,10 +76,10 @@ function LoadJSON({ datas, setDatas, limit, page}) {
 
     // json 파일 불러오기
     useEffect(() => {
-        const fetchFoods = axios.get("../src/jsons/foods.json");
-        const fetchFoods2 = axios.get("../src/jsons/foods2.json");
-        const fetchItems = axios.get("../src/jsons/items.json");
-        const fetchItems2 = axios.get("../src/jsons/items2.json");
+        const fetchFoods = axios.get("../jsons/foods.json");
+        const fetchFoods2 = axios.get("../jsons/foods2.json");
+        const fetchItems = axios.get("../jsons/items.json");
+        const fetchItems2 = axios.get("../jsons/items2.json");
 
         Promise.all([fetchFoods, fetchFoods2, fetchItems, fetchItems2])
             .then((response) => {
