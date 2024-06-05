@@ -1,10 +1,10 @@
 {
   "files": {
-    "main.js": "/m-plan/static/js/main.53438817.js",
+    "main.js": "/m-plan/static/js/main.e3f02f7c.js",
     "index.html": "/m-plan/index.html",
-    "main.53438817.js.map": "/m-plan/static/js/main.53438817.js.map"
+    "main.e3f02f7c.js.map": "/m-plan/static/js/main.e3f02f7c.js.map"
   },
   "entrypoints": [
-    "static/js/main.53438817.js"
+    "static/js/main.e3f02f7c.js"
   ]
 }
