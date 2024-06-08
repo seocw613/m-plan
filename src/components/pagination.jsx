@@ -46,7 +46,7 @@ const PageButton = styled.button`
     }
 `;
 
-function Pagination({ datas, limit, page, setPage }) {
+function Pagination({ datas, limit, page, setSessionPage }) {
     //총 페이지 수
     const [totalPage, setTotalPage] = useState(1);
     //페이지네이션에서 표시할 페이지 수
@@ -57,26 +57,25 @@ function Pagination({ datas, limit, page, setPage }) {
 
     useEffect(() => {
         setTotalPage(Math.ceil(datas?.length / limit));
-        setPage(1);
     }, [datas]);
 
     useEffect(() => {
         const tmpEndPage = startPage + paginationLimit - 1;
         tmpEndPage > totalPage
             ? setEndPage(totalPage)
-            : setEndPage(tmpEndPage)
+            : setEndPage(tmpEndPage);
     }, [totalPage, page]);
 
     const handlePageChange = (e) => {
-        setPage(e.target.value);
+        setSessionPage(e.target.value)
     }
 
     const handlePagePrev = () => {
-        setPage(startPage - 1);
+        setSessionPage(startPage - 1);
     }
 
     const handlePageNext = () => {
-        setPage(startPage + 10);
+        setSessionPage(startPage + 10);
     }
 
     return (
