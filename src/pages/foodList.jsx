@@ -1,6 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { useNavigate, useOutletContext } from "react-router-dom";
-import axios from "axios";
 import styled from "styled-components";
 import Pagination from "../components/Pagination";
 
@@ -14,7 +13,6 @@ const FoodContainerWrapper = styled.div`
 `;
 
 const FoodContainer = styled.div`
-    height: 66px;
     display: flex;
     padding: 12px;
     align-items: center;
@@ -23,32 +21,33 @@ const FoodContainer = styled.div`
         background-color: lightblue;
         border-top: 1px solid blue;
         text-align: center;
-        span {
-            cursor: default;
-        }
     }
 `;
 
 const FoodTitle = styled.span`
-    height: 40px;
     flex-basis: 500px;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    cursor: pointer;
+    gap: 0.5rem;
+    padding-right: 2rem;
 `;
 
-const Name = styled.div`
-    height: 20px;
+const Name = styled.span`
     font-size: 18px;
-    line-height: 20px;
+
+    /* 한/중/일어 단어가 잘리지 않도록 설정 */
+    word-break: keep-all;
+
+    cursor: pointer;
+    .title & {
+        line-height: 40px;
+        cursor: text;
+    }
 `;
 
 const Maker = styled.div`
-    height: 14px;
     font-size: 14px;
     color: rgba(155, 155, 155, 0.8);
-    margin-top: 5px;
 `;
 
 const NutrientsWrapper = styled.span`
@@ -73,12 +72,11 @@ const Nutrients = styled.span`
 
 function FoodList() {
     const navigate = useNavigate();
-    const foodApiKey = "0583d0a8e4d044e6a4e9";
 
     // OutletContext
     const context = useOutletContext();
     // 검색된 식품 정보
-    const datas = context.datas;
+    const foodDatas = context.foodDatas;
     // 현재 페이지 번호
     const page = context.page;
     // 페이지 번호 넣으면 현재 페이지 변경하는 함수
@@ -93,18 +91,23 @@ function FoodList() {
     const handleGetDetail = (food) => {
         navigate("/detail", {
             state: {
-                food: food,
+                food: food
             }
         });
     };
-    
+
+    // 단위 반영
+    const isNone = (nutrient) => {
+        if (nutrient === undefined || nutrient === "-") return "-";
+        return nutrient;
+    };
+
     return (
         <Wrapper>
             <FoodContainerWrapper>
                 <FoodContainer className="title">
                     <FoodTitle>
                         <Name>식품명</Name>
-                        <Maker>제조사</Maker>
                     </FoodTitle>
                     <NutrientsWrapper>
                         <Nutrients>1회 제공량당</Nutrients>
@@ -116,23 +119,25 @@ function FoodList() {
                         </NutrientsLowerWrapper>
                     </NutrientsWrapper>
                 </FoodContainer>
-                {datas &&
-                    datas.slice(startOrder, lastOrder).map((e) => (
-                        <FoodContainer key={e.식품코드 || e["DB10.2 색인"]}>
-                            <FoodTitle onClick={() => handleGetDetail(e)}>
-                                <Name>{e.식품명.split('_').reverse().join(' ')}</Name>
-                                <Maker>{e.업체명}</Maker>
+                {foodDatas &&
+                    foodDatas.slice(startOrder, lastOrder).map((food) => (
+                        <FoodContainer key={food.id}>
+                            <FoodTitle>
+                                <Name onClick={() => handleGetDetail(food)}>
+                                    {food.name}
+                                </Name>
+                                <Maker>{food.description} | {food.maker}</Maker>
                             </FoodTitle>
-                            <Nutrients name="calory">{e["에너지(kcal)"] || '-'}</Nutrients>
-                            <Nutrients name="carbohydrate">{e["탄수화물(g)"] || '-'}</Nutrients>
-                            <Nutrients name="protein">{e["단백질(g)"] || '-'}</Nutrients>
-                            <Nutrients name="fat">{e["지방(g)"] || '-'}</Nutrients>
+                            <Nutrients name="calorie">{isNone(food.calorie)}</Nutrients>
+                            <Nutrients name="carbohydrate">{isNone(food.carbohydrate)}</Nutrients>
+                            <Nutrients name="protein">{isNone(food.protein)}</Nutrients>
+                            <Nutrients name="fat">{isNone(food.fat)}</Nutrients>
                         </FoodContainer>
                     ))
                 }
             </FoodContainerWrapper>
             <Pagination
-                datas={datas}
+                foodDatas={foodDatas}
                 limit={limit}
                 page={page}
                 setSessionPage={setSessionPage} />

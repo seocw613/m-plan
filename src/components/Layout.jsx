@@ -14,9 +14,9 @@ const Box = styled.nav`
 
 function Layout() {
     // 식품 정보
-    const [originalDatas, setOriginalDatas] = useState();
+    const [originalFoodDatas, setOriginalFoodDatas] = useState();
     // 검색된 식품 정보
-    const [datas, setDatas] = useState();
+    const [foodDatas, setFoodDatas] = useState();
 
     // 현재 페이지 번호
     const [page, setPage] = useState(() => {
@@ -27,44 +27,42 @@ function Layout() {
     // json 파일 불러오기
     useEffect(() => {
         // 파일 경로
-        const fileDir = `${process.env.PUBLIC_URL}/jsons/`;
+        const fileDir = `${process.env.PUBLIC_URL}/jsons`;
 
-        const fetchFoods = axios.get(`${fileDir}foods.json`);
-        const fetchFoods2 = axios.get(`${fileDir}foods2.json`);
-        const fetchItems = axios.get(`${fileDir}items.json`);
-        const fetchItems2 = axios.get(`${fileDir}items2.json`);
+        const fetchFoodDatas1 = axios.get(`${fileDir}/foods1.json`);
+        const fetchFoodDatas2 = axios.get(`${fileDir}/foods2.json`);
+        const fetchFoodDatas3 = axios.get(`${fileDir}/foods3.json`);
+        const fetchFoodDatas4 = axios.get(`${fileDir}/foods4.json`);
 
-        Promise.all([fetchFoods, fetchFoods2, fetchItems, fetchItems2])
+        Promise.all([fetchFoodDatas1, fetchFoodDatas2, fetchFoodDatas3, fetchFoodDatas4])
             .then((response) => {
                 const [response1, response2, response3, response4] = response;
 
-                const datas1 = response1.data[Object.keys(response1.data)];
-                const datas2 = response2.data[Object.keys(response2.data)];
-                const datas3 = response3.data[Object.keys(response3.data)];
-                const datas4 = response4.data[Object.keys(response4.data)];
+                const foodDatas1 = response1.data;
+                const foodDatas2 = response2.data;
+                const foodDatas3 = response3.data;
+                const foodDatas4 = response4.data;
 
-                // sample 객체 삭제
-                datas1.shift();
-                datas2.shift();
-                datas3.shift();
-                datas4.shift();
-
-                setOriginalDatas([...datas1, ...datas2, ...datas3, ...datas4]);
+                setOriginalFoodDatas([...foodDatas1, ...foodDatas2, ...foodDatas3, ...foodDatas4]);
             })
             .catch((error) => {
                 console.error("Error fetching JSON files:", error);
-            })
+            });
     }, []);
 
     useEffect(() => {
-        setDatas(originalDatas);
-    }, [originalDatas]);
+        setFoodDatas(originalFoodDatas);
+    }, [originalFoodDatas]);
 
     // 세션스토리지에 페이지 번호 저장
-    const setSessionPage = (number) => {
-        setPage(number);
-        sessionStorage.setItem("page", number);
+    const setSessionPage = (num) => {
+        setPage(num);
+        sessionStorage.setItem("page", num);
     };
+
+    useEffect(() => {
+        // console.log("foodDatas", foodDatas);
+    }, [foodDatas]);
 
     return (
         <Wrapper>
@@ -72,10 +70,11 @@ function Layout() {
                 <Link to="/">List</Link>{"\t"}
             </nav>
             <SearchBar
-                originalDatas={originalDatas}
-                setDatas={setDatas}
+                originalFoodDatas={originalFoodDatas}
+                foodDatas={foodDatas}
+                setFoodDatas={setFoodDatas}
                 setSessionPage={setSessionPage} />
-            <Outlet context={{ datas, page, setSessionPage }} />
+            <Outlet context={{ foodDatas, page, setSessionPage }} />
         </Wrapper>
     );
 }
