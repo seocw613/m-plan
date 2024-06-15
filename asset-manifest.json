@@ -1,10 +1,10 @@
 {
   "files": {
-    "main.js": "/m-plan/static/js/main.79b36ab4.js",
+    "main.js": "/m-plan/static/js/main.ea61b192.js",
     "index.html": "/m-plan/index.html",
-    "main.79b36ab4.js.map": "/m-plan/static/js/main.79b36ab4.js.map"
+    "main.ea61b192.js.map": "/m-plan/static/js/main.ea61b192.js.map"
   },
   "entrypoints": [
-    "static/js/main.79b36ab4.js"
+    "static/js/main.ea61b192.js"
   ]
 }
