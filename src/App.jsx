@@ -1,9 +1,14 @@
-import { styled, createGlobalStyle } from "styled-components";
+import { createGlobalStyle } from "styled-components";
 import { reset } from "styled-reset";
-import { createHashRouter, RouterProvider } from "react-router-dom";
-import FoodDetail from "./pages/foodDetail.jsx";
-import FoodList from "./pages/foodList.jsx";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import FoodDetail from "./pages/Food/foodDetail.jsx";
+import FoodList from "./pages/Food/foodList.jsx";
 import Layout from "./components/Layout.jsx";
+import MealPlanList from "./pages/mealPlan/mealPlanList.jsx";
+import MealPlanDetail from "./pages/mealPlan/mealPlanDetail.jsx";
+import MainPage from "./pages/MainPage.jsx";
+import FoodLayout from "./pages/Food/foodLayout.jsx";
+import MealPlanLayout from "./pages/mealPlan/mealPlanLayout.jsx";
 
 const GlobalStyle = createGlobalStyle`
   ${reset}
@@ -11,6 +16,8 @@ const GlobalStyle = createGlobalStyle`
     box-sizing: border-box;
     padding: 0;
     margin: 0;
+    color: black;
+    text-decoration: none;
   }
 
   @font-face {
@@ -26,31 +33,56 @@ const GlobalStyle = createGlobalStyle`
   }
 `;
 
-const router = createHashRouter([
+const router = createBrowserRouter([
   {
     path: "/",
     element: <Layout />,
     children: [
       {
         path: "",
-        element: <FoodList />
+        element: <MainPage />,
       },
       {
-        path: "detail",
-        element: <FoodDetail />
-      }
+        path: "food/",
+        element: <FoodLayout />,
+        children: [
+          {
+            path: "",
+            element: <FoodList />,
+          },
+          {
+            path: "detail",
+            element: <FoodDetail />,
+          },
+        ]
+      },
+      {
+        path: "mealPlan/",
+        element: <MealPlanLayout />,
+        children: [
+          {
+            path: "",
+            element: <MealPlanList />,
+          },
+          {
+            path: "detail",
+            element: <MealPlanDetail />,
+          },
+        ]
+      },
     ]
-  }
-])
-
-const Wrapper = styled.div``;
+  },
+],
+{
+  basename: "/m-plan",
+});
 
 function App() {
   return (
-    <Wrapper>
+    <div>
       <GlobalStyle />
       <RouterProvider router={router} />
-    </Wrapper>
+    </div>
   );
 }
 

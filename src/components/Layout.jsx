@@ -67,14 +67,11 @@ function Layout() {
     return (
         <Wrapper>
             <nav>
-                <Link to="/">List</Link>{"\t"}
+                <Link to="/">Main Page</Link>{"\t"}
+                <Link to="/food/">Food</Link>{"\t"}
+                <Link to="/mealPlan/">Meal Plan</Link>{"\t"}
             </nav>
-            <SearchBar
-                originalFoodDatas={originalFoodDatas}
-                foodDatas={foodDatas}
-                setFoodDatas={setFoodDatas}
-                setSessionPage={setSessionPage} />
-            <Outlet context={{ foodDatas, page, setSessionPage }} />
+            <Outlet context={{ originalFoodDatas, foodDatas, page, setFoodDatas, setSessionPage }} />
         </Wrapper>
     );
 }

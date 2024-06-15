@@ -27,7 +27,7 @@ function FoodDetail() {
         setNumberSize();
     }, []);
 
-    // "-" 입력 안되게 하기 위함
+    // 1회 제공량 수정, "-" 입력 안되게 함
     const handleChange = (event) => {
         const value = event.target.value;
         const regex = /^[0-9]+$/;
@@ -51,7 +51,6 @@ function FoodDetail() {
 
     return (
         <FoodDetailLayout>
-
             <table>
                 <thead>
                     <tr>

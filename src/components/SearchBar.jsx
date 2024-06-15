@@ -13,37 +13,46 @@ const Form = styled.form`
 `;
 
 const SearchContainer = styled.div`
+    height: 36px;
+    overflow: hidden;
     display: flex;
     align-items: center;
-`;
-
-const Select = styled.select`
-    font-size: 1rem;
-    padding: 10px 10px;
-    margin-right: 10px;
-`;
-
-const Input = styled.input`
-    width: 400px;
-    height: 36px;
-    font-size: 1.125rem;
-    padding: 6px 36px 6px 12px;
     border: 1px solid gray;
     border-radius: 18px;
 `;
 
-const Button = styled.button`
-    width: 28px;
-    height: 28px;
-    margin: 4px;
-    transform: translateX(-36px);
-    border-radius: 14px;
+const Select = styled.select`
+    font-size: 1rem;
+    padding: 8px;
+    margin-right: 10px;
     border: none;
-    background-color: lightblue;
+    &:focus {
+        outline: none;
+    }
+    & option {
+        margin: 5px 0;
+    }
+`;
+
+const Input = styled.input`
+    width: 400px;
+    font-size: 1.125rem;
+    padding: 6px;
+    border: none;
+    &:focus {
+        outline: none;
+    }
+`;
+
+const Button = styled.button`
+    padding: 10px;
+    border: none;
+    background-color: white;
     cursor: pointer;
     svg {
         width: 22px;
-        height: 28px;
+        height: 22px;
+        vertical-align: middle;
     }
 `;
 
@@ -90,7 +99,7 @@ function SearchBar({ originalFoodDatas, foodDatas, setFoodDatas, setSessionPage 
 
         searchDatas(searchAt, keywords, isReSearch);
         setSessionPage(1);
-        navigate("/");
+        navigate("/food/");
     };
 
     return (

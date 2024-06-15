@@ -6,8 +6,8 @@ import { getFirestore } from "firebase/firestore";
 // https://firebase.google.com/docs/web/setup#available-libraries
 
 // API key
-const config = require("../config");
-const apiKey = config.firebaseKey;
+const config = require("./config");
+const firebaseKey = config.firebaseKey;
 
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
