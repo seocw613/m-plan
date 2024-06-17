@@ -1,5 +1,12 @@
-import { Link, useLocation, useOutletContext } from "react-router-dom";
+import { deleteDoc, doc } from "firebase/firestore";
+import { useEffect, useRef, useState } from "react";
+import { Link, useLocation, useNavigate, useOutletContext } from "react-router-dom";
 import styled from "styled-components";
+import { db } from "../../firebase";
+
+const Form = styled.form`
+    display: none;
+`;
 
 const FoodListContainer = styled.div`
     display: flex;
@@ -42,13 +49,6 @@ const Maker = styled.span`
 
 const NutrientsContainer = styled.span`
     display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    gap: 10px;
-`;
-
-const NutrientsBox = styled.span`
-    display: flex;
     justify-content: center;
 `;
 
@@ -61,6 +61,8 @@ const Nutrients = styled.span`
 `;
 
 function MealPlanDetail() {
+    const navigate = useNavigate();
+
     const location = useLocation();
     const mealPlan = location.state.mealPlan;
 
@@ -68,88 +70,117 @@ function MealPlanDetail() {
     const context = useOutletContext();
     // 검색된 식품 정보
     const originalFoodDatas = context.originalFoodDatas;
-    console.log(originalFoodDatas);
 
-    // 단위 추가
-    const isNone = (nutrient) => {
+    // 식단 이름
+    const [mealPlanName, setMealPlanName] = useState(mealPlan.name);
+
+    // 중량 정보
+    const [sizes, setSizes] = useState([]);
+
+    const handleClick = async () => {
+        if (!window.confirm("식단을 삭제하시겠습니까?")) return;
+
+        const collectionName = "mealPlans";
+
+        const docRef = doc(db, collectionName, mealPlan.id);
+        await deleteDoc(docRef);
+
+        navigate("../");
+    };
+
+    // 영양성분의 양을 매개변수로 입력하면 사용자가 지정한 음식 중량에 맞춰 변환
+    const setAmountPerSize = (food, nutrient) => {
         if (nutrient === undefined || nutrient === "-") return "-";
-        return nutrient;
-    };
 
-    // 1회 제공량 수정, "-" 입력 안되게 함
-    const handleChange = (event) => {
-        const value = event.target.value;
-        const regex = /^[0-9]+$/;
+        const size = food.serving_size;
 
-        if (!regex.test(value)) {
-            event.target.value = "";
-            return;
-        }
-        if (value > 10000) {
-            event.target.value = 10000;
-            return;
-        }
+        return Math.round(Number(nutrient) * size / 100 * 100) / 100;
     };
+    // const setAmountPerSize = (food, nutrient) => {
+    //     if (nutrient === undefined || nutrient === "-" || sizes.length == 0) return "-";
+
+    //     const size = sizes.find((size) => size.id == food.id).size;
+
+    //     return Math.round(Number(nutrient) * size / 100 * 100) / 100;
+    // };
+
+    useEffect(() => {
+        console.log("foods:", mealPlan.foods);
+        // 중량 정보 별도 저장
+        setSizes([...mealPlan.foods.map((food) => {
+            const data = { id: food.id, size: food.size };
+            return data;
+        })]);
+    }, []);
+
+    useEffect(() => {
+        console.log("rendered");
+    });
+
+    useEffect(() => {
+        console.log(sizes);
+    }, [sizes]);
 
     return (
         <div>
-            {mealPlan.name}
+            <div>{mealPlanName}</div>
+            <Link
+                to="../update"
+                state={{ mealPlan: mealPlan }}>
+                <button>수정</button>
+            </Link>
+            <button onClick={handleClick}>삭제</button>
             <FoodListContainer>
                 <FoodContainer className="title">
                     <FoodTitle>
                         <Name>식품명</Name>
                     </FoodTitle>
                     <div>
-                        1회 제공량(g)
+                        중량(g)
                     </div>
                     <NutrientsContainer>
-                        <NutrientsBox>
-                            <Nutrients>1회 제공량당</Nutrients>
-                        </NutrientsBox>
-                        <NutrientsBox>
-                            <Nutrients>에너지(kcal)</Nutrients>
-                            <Nutrients>탄수화물(g)</Nutrients>
-                            <Nutrients>단백질(g)</Nutrients>
-                            <Nutrients>지방(g)</Nutrients>
-                        </NutrientsBox>
+                        <Nutrients>에너지(kcal)</Nutrients>
+                        <Nutrients>탄수화물(g)</Nutrients>
+                        <Nutrients>단백질(g)</Nutrients>
+                        <Nutrients>지방(g)</Nutrients>
                     </NutrientsContainer>
                 </FoodContainer>
-                {
-                    mealPlan.foods.length > 0
-                        ? mealPlan.foods.map((food) => {
-                            if (originalFoodDatas === undefined) return;
-                            for (const foodData of originalFoodDatas) {
-                                console.log(!(foodData.id == food.id));
-                                // if (!(foodData.id == food.id)) continue;
-                                if (foodData.id == food.id) {
-                                foodData.serving_size = food.size;
-                                return (
-                                    <FoodContainer key={foodData.id}>
-                                        <FoodTitle>
-                                            <Name>
-                                                <Link to="/food/detail" state={{ food: foodData }}>
-                                                    {foodData.name}
-                                                </Link>
-                                            </Name>
-                                            <Maker>{foodData.description} | {foodData.maker}</Maker>
-                                        </FoodTitle>
-                                        <input
-                                            onChange={handleChange}
-                                            defaultValue={foodData.serving_size}
-                                            placeholder={foodData.serving_size} />
-                                        <NutrientsContainer>
-                                            <NutrientsBox>
-                                                <Nutrients name="calorie">{isNone(foodData.calorie)}</Nutrients>
-                                                <Nutrients name="carbohydrate">{isNone(foodData.carbohydrate)}</Nutrients>
-                                                <Nutrients name="protein">{isNone(foodData.protein)}</Nutrients>
-                                                <Nutrients name="fat">{isNone(foodData.fat)}</Nutrients>
-                                            </NutrientsBox>
-                                        </NutrientsContainer>
-                                    </FoodContainer>
-                                )}
-                            }
-                        })
-                        : <span>no datas</span>
+                {mealPlan.foods !== undefined
+                    && mealPlan.foods.length !== 0
+                    && originalFoodDatas !== undefined
+                    ? mealPlan.foods.map((food) => {
+                        const foodData = originalFoodDatas
+                            .find((originalFood) => originalFood.id === food.id);
+                        foodData.serving_size = food.size;
+                        return (
+                            <FoodContainer key={foodData.id}>
+                                <FoodTitle>
+                                    <Name>
+                                        <Link to="/food/detail" state={{ food: foodData }}>
+                                            {foodData.name}
+                                        </Link>
+                                    </Name>
+                                    <Maker>{foodData.description} | {foodData.maker}</Maker>
+                                </FoodTitle>
+                                <div>{foodData.serving_size}</div>
+                                <NutrientsContainer>
+                                    <Nutrients name="calorie">
+                                        {setAmountPerSize(foodData, foodData.calorie)}
+                                    </Nutrients>
+                                    <Nutrients name="carbohydrate">
+                                        {setAmountPerSize(foodData, foodData.carbohydrate)}
+                                    </Nutrients>
+                                    <Nutrients name="protein">
+                                        {setAmountPerSize(foodData, foodData.protein)}
+                                    </Nutrients>
+                                    <Nutrients name="fat">
+                                        {setAmountPerSize(foodData, foodData.fat)}
+                                    </Nutrients>
+                                </NutrientsContainer>
+                            </FoodContainer>
+                        )
+                    })
+                    : <span>no datas</span>
                 }
             </FoodListContainer>
         </div>

@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useOutletContext } from "react-router-dom";
 import styled from "styled-components";
 import Pagination from "../../components/Pagination.jsx";
 import { db } from "../../firebase.jsx";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, setDoc } from "firebase/firestore";
 import { v4 as uuidv4 } from "uuid";
 
 const FoodListLayout = styled.div`
@@ -22,6 +22,7 @@ const FoodContainer = styled.div`
     padding: 12px;
     border-bottom: 1px solid rgba(155, 155, 155, 0.5);
     &.title {
+        padding: 20px 12px;
         background-color: lightblue;
         border-top: 1px solid blue;
         text-align: center;
@@ -32,8 +33,8 @@ const FoodTitle = styled.span`
     flex-basis: 500px;
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
-    padding-right: 2rem;
+    gap: 8px;
+    padding-right: 32px;
 `;
 
 const Name = styled.span`
@@ -49,13 +50,6 @@ const Maker = styled.span`
 `;
 
 const NutrientsContainer = styled.span`
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    gap: 10px;
-`;
-
-const NutrientsBox = styled.span`
     display: flex;
     justify-content: center;
 `;
@@ -84,59 +78,142 @@ function FoodList() {
     let startOrder = (page - 1) * limit;
     let lastOrder = page * limit;
 
-    // 단위 추가
+    // 식단 목록
+    const [mealPlanDatas, setMealPlanDatas] = useState();
+    // 선택한 식단 식별번호
+    const mealPlanIdRef = useRef("");
+
+    // 식단 목록 가져오기
+    const getMealPlanDatas = async () => {
+        // firebase collection 이름
+        const collectionName = "mealPlans";
+
+        // 보여줄 식단 id 목록
+        const mealPlanDataIds = ["test", "test1"];
+
+        // 임시 식단 목록
+        const tmpMealPlanDatas = [];
+
+        // for (const mealPlanDataId of mealPlanDataIds) {
+        //     // firstore에서 식단 가져오기
+        //     const docRef = doc(db, collection, mealPlanDataId);
+        //     const docSnap = await getDoc(docRef);
+        //     tmpMealPlanDatas.push(docSnap.data());
+        // }
+        const querySanpshot = await getDocs(collection(db, collectionName));
+        querySanpshot.forEach((doc) => {
+            tmpMealPlanDatas.push(doc.data());
+        });
+
+        setMealPlanDatas(tmpMealPlanDatas);
+    };
+
+    // 새 식단 생성
+    const createMealPlan = async () => {
+        // 식단 이름
+        let mealPlanName = "";
+
+        // 프롬프트 안내 문구
+        let promptText = "새 식단의 이름을 입력해주세요\n최소 1, 최대 20글자";
+        let isContinue = true;
+        let isCancel = false;
+        // 식단 이름 받기
+        while (isContinue) {
+            mealPlanName = prompt(promptText);
+            if (mealPlanName === null) {
+                isCancel = true;
+                break;
+            };
+            isContinue = false;
+            if (mealPlanName.length < 1 || mealPlanName.length > 20) isContinue = true;
+            if (mealPlanName === "새 식단") {
+                alert("해당 이름은 사용할 수 없습니다.");
+                isContinue = true;
+            };
+            for (const mealPlanData of mealPlanDatas) {
+                if (mealPlanData.name === mealPlanName) {
+                    alert("이미 등록된 식단 이름입니다.");
+                    isContinue = true;
+                };
+            };
+        };
+        if (isCancel) return isCancel;
+
+        const mealPlanId = uuidv4();
+        
+        const mealPlan = {
+            id: mealPlanId,
+            name: mealPlanName,
+            foods: [],
+        };
+
+        const collectionName = "mealPlans";
+        const docRef = doc(db, collectionName, mealPlan.id);
+        await setDoc(docRef, mealPlan);
+        return isCancel;
+    };
+
+    // 새 식단을 선택한 경우 새 식단 생성
+    const handleChange = async (event) => {
+        if (event.target.value !== "new") return;
+
+        createMealPlan();
+
+        getMealPlanDatas();
+
+        mealPlanIdRef.current.value = "none";
+    };
+
+    // 값이 없는 경우 "-"로 표기
     const isNone = (nutrient) => {
-        if (nutrient === undefined || nutrient === "-") return "-";
+        if (nutrient === undefined || nutrient === null) return "-";
         return nutrient;
     };
 
-    // 1회 섭취참고량 값에서 숫자만 추출하여 size에 저장
-    const setSize = (size) => {
-        if (size === "" || size === undefined) return 100;
-        const regex = /[^0-9]/g;
-        return Number(size.replace(regex, ""));
-    };
-
-    // 식단 목록에 식품 추가
+    // 식단에 식품 추가
     const handleAddFoodToMeal = async (event) => {
         // collection 이름
         const collection = "mealPlans";
 
+        const mealPlanId = mealPlanIdRef.current.value;
+
+        // 식단을 선택하지 않았으면 반환
+        if (mealPlanId === "none") {
+            document.getElementById("mealPlan").focus();
+            alert("식단을 선택해주세요");
+            return;
+        };
+
+        // 내 식단 목록에서 선택한 식단 저장
+        const docRef = doc(db, collection, mealPlanId);
+        const docSnap = await getDoc(docRef);
+        const mealPlan = docSnap.data();
+
+        // 추가되는 식품 정보 저장
         const foodData = JSON.parse(event.target.value);
-        const serving_size = setSize(foodData.serving_size);
+        const serving_size = foodData.serving_size;
 
         const food = { id: String(foodData.id), size: serving_size };
 
-        // 문서 고유식별번호, 문서명
-        // const UUID = uuidv4();
-        const UUID = "test1";
-        const mealPlanName = "name1";
-
-        // 기존 데이터가 있다면 가져오기
-        const docRef = doc(db, collection, UUID);
-        const docSnap = await getDoc(docRef);
-        const oldData = docSnap.data();
-
-        const foods = [];
-
-        if (!(oldData === undefined)) {
-            // 기존의 식품 데이터 저장
-            foods.push(...oldData.foods);
+        // 해당 식단에 선택한 식품과 중복되는 데이터가 있다면 반환
+        if (mealPlan.foods.some((foodData) => foodData.id === food.id)) {
+            alert("이미 식단에 등록된 식품입니다.");
+            return;
         };
 
-        // 해당 식단에 선택한 식품과 중복되는 게 없다면 데이터 저장
-        if (!foods.some((element) => element.id === food.id)) {
-            foods.push(food);
-        };
+        mealPlan.foods.push(food);
 
-        const data = {
-            id: UUID,
-            name: mealPlanName,
-            foods: foods
-        };
+        await setDoc(doc(db, collection, mealPlan.id), mealPlan);
+        alert("등록되었습니다");
+    };
 
-        await setDoc(doc(db, collection, UUID), data);
-    }
+    useEffect(() => {
+        getMealPlanDatas();
+    }, []);
+
+    useEffect(() => {
+        console.log("mealPlanDatas:", mealPlanDatas);
+    }, [mealPlanDatas]);
 
     return (
         <FoodListLayout>
@@ -146,16 +223,24 @@ function FoodList() {
                         <Name>식품명</Name>
                     </FoodTitle>
                     <NutrientsContainer>
-                        <NutrientsBox>
-                            <Nutrients>1회 제공량당</Nutrients>
-                        </NutrientsBox>
-                        <NutrientsBox>
-                            <Nutrients>에너지(kcal)</Nutrients>
-                            <Nutrients>탄수화물(g)</Nutrients>
-                            <Nutrients>단백질(g)</Nutrients>
-                            <Nutrients>지방(g)</Nutrients>
-                        </NutrientsBox>
+                        <Nutrients>에너지(kcal)</Nutrients>
+                        <Nutrients>탄수화물(g)</Nutrients>
+                        <Nutrients>단백질(g)</Nutrients>
+                        <Nutrients>지방(g)</Nutrients>
                     </NutrientsContainer>
+                    <select
+                        id="mealPlan"
+                        name="mealPlan"
+                        ref={mealPlanIdRef}
+                        onChange={handleChange}>
+                        <option value="none">식단 선택</option>
+                        <option value="new">새 식단</option>
+                        {mealPlanDatas &&
+                            mealPlanDatas.map((mealPlan) => (
+                                <option key={mealPlan.id} value={mealPlan.id}>{mealPlan.name}</option>
+                            ))
+                        }
+                    </select>
                 </FoodContainer>
                 {foodDatas &&
                     foodDatas.slice(startOrder, lastOrder).map((food) => (
@@ -169,12 +254,18 @@ function FoodList() {
                                 <Maker>{food.description} | {food.maker}</Maker>
                             </FoodTitle>
                             <NutrientsContainer>
-                                <NutrientsBox>
-                                    <Nutrients name="calorie">{isNone(food.calorie)}</Nutrients>
-                                    <Nutrients name="carbohydrate">{isNone(food.carbohydrate)}</Nutrients>
-                                    <Nutrients name="protein">{isNone(food.protein)}</Nutrients>
-                                    <Nutrients name="fat">{isNone(food.fat)}</Nutrients>
-                                </NutrientsBox>
+                                <Nutrients name="calorie">
+                                    {isNone(food.calorie)}
+                                </Nutrients>
+                                <Nutrients name="carbohydrate">
+                                    {isNone(food.carbohydrate)}
+                                </Nutrients>
+                                <Nutrients name="protein">
+                                    {isNone(food.protein)}
+                                </Nutrients>
+                                <Nutrients name="fat">
+                                    {isNone(food.fat)}
+                                </Nutrients>
                             </NutrientsContainer>
                             <button onClick={handleAddFoodToMeal} value={JSON.stringify(food)} >담기</button>
                         </FoodContainer>

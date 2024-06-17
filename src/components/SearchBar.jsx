@@ -67,23 +67,25 @@ function SearchBar({ originalFoodDatas, foodDatas, setFoodDatas, setSessionPage 
 
     const navigate = useNavigate();
 
-    const searchDatas = (searchAt, keywords, isReSearch) => {
+    // 검색 데이터 가져오기
+    const getDatas = (searchAt, keywords, isReSearch) => {
         // 재검색 여부에 따라 검색범위 제한
         const list = [];
         if (isReSearch) list.push(...foodDatas);
         else list.push(...originalFoodDatas);
 
-        // 검색어에 해당하는 식품만 저장
-        setFoodDatas(list.reduce((foods, food) => {
-            // 검색어 없이 검색하는 경우 원본 데이터 반환
-            if (keywords[0] === '') return list;
+        // 검색어 없이 검색하는 경우 원본 데이터 반환
+        if (keywords[0] === '') return setFoodDatas(list);
 
-            // 띄어쓰기를 기준, AND 조건으로 검색
+        const tmpFoodDatas = list.reduce((accumulator, food) => {
+            // AND 조건, 검색 키워드 중 하나라도 없으면 리스트에서 제외
             for (const keyword of keywords) {
-                if (!food[searchAt].includes(keyword)) return [...foods];
-            }
-            return [...foods, food];
-        }, []));
+                if (!food[searchAt].includes(keyword)) return accumulator;
+            };
+            return [...accumulator, food];
+        }, []);
+
+        setFoodDatas(tmpFoodDatas);
     };
 
     const handleSearch = (e) => {
@@ -93,12 +95,15 @@ function SearchBar({ originalFoodDatas, foodDatas, setFoodDatas, setSessionPage 
 
         // 검색 키워드
         const keywords = searchRef.current.value.split(" ");
+        console.log("keywords:", keywords);
 
         // 검색항목 내에서 재검색 여부 확인
         const isReSearch = e.target.isReSearch.checked;
 
-        searchDatas(searchAt, keywords, isReSearch);
+        getDatas(searchAt, keywords, isReSearch);
         setSessionPage(1);
+
+        // 상세 페이지에서 검색할 때 목록 페이지로 전환
         navigate("/food/");
     };
 
