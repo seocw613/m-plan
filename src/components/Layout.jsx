@@ -1,16 +1,9 @@
 import axios from "axios";
-import { createContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, Outlet } from "react-router-dom";
 import styled from "styled-components";
-import SearchBar from "./SearchBar";
 
 const Wrapper = styled.nav``;
-
-const Box = styled.nav`
-    width: 100px;
-    height: 100px;
-    border: 1px solid red;
-`;
 
 function Layout() {
     // 식품 정보
@@ -59,10 +52,6 @@ function Layout() {
         setPage(num);
         sessionStorage.setItem("page", num);
     };
-
-    useEffect(() => {
-        // console.log("foodDatas", foodDatas);
-    }, [foodDatas]);
 
     return (
         <Wrapper>

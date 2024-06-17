@@ -1,33 +1,151 @@
+import { collection, doc, getDocs, setDoc } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import styled from "styled-components";
+import { db } from "../../firebase";
+import { v4 as uuidv4 } from "uuid";
 
 const FoodDetailLayout = styled.div``;
+
+const MealPlanSelectContainer = styled.dialog`
+    margin: auto;
+`;
 
 function FoodDetail() {
     const location = useLocation();
     const food = location.state.food;
 
-    // 단위 반영
+    // 식단 목록
+    const [mealPlanDatas, setMealPlanDatas] = useState();
+
+    // 사용자 지정 음식 중량
+    const [size, setSize] = useState(food.serving_size);
+
+    // 식단 목록 가져오기
+    const getMealPlanDatas = async () => {
+        // firebase collection 이름
+        const collectionName = "mealPlans";
+
+        // 보여줄 식단 id 목록
+        const mealPlanDataIds = ["test", "test1"];
+
+        // 임시 식단 목록
+        const tmpMealPlanDatas = [];
+
+        // for (const mealPlanDataId of mealPlanDataIds) {
+        //     // firstore에서 식단 가져오기
+        //     const docRef = doc(db, collection, mealPlanDataId);
+        //     const docSnap = await getDoc(docRef);
+        //     tmpMealPlanDatas.push(docSnap.data());
+        // }
+        const querySanpshot = await getDocs(collection(db, collectionName));
+        querySanpshot.forEach((doc) => {
+            tmpMealPlanDatas.push(doc.data());
+        });
+
+        setMealPlanDatas(tmpMealPlanDatas);
+
+        return tmpMealPlanDatas;
+    };
+
+    // 식단에 식품 저장
+    const handleSaveClick = () => {
+        const foodSize = size !== "" ? Number(size) : food.serving_size;
+        const data = { id: food.id, size: food.size };
+
+        const collectionName = "mealPlans";
+
+        getMealPlanDatas();
+
+        const selectModal = document.getElementById("selectModal");
+        selectModal.showModal();
+    };
+
+    // 새 식단 생성
+    const createMealPlan = async () => {
+        // 식단 이름
+        let mealPlanName = "";
+
+        // 프롬프트 안내 문구
+        let promptText = "새 식단의 이름을 입력해주세요\n최소 1, 최대 20글자";
+        let isContinue = true;
+        let isCancel = false;
+        // 식단 이름 받기
+        while (isContinue) {
+            mealPlanName = prompt(promptText);
+            if (mealPlanName === null) {
+                isCancel = true;
+                break;
+            };
+            isContinue = false;
+            if (mealPlanName.length < 1 || mealPlanName.length > 20) isContinue = true;
+            if (mealPlanName === "새 식단") {
+                alert("해당 이름은 사용할 수 없습니다.");
+                isContinue = true;
+            };
+            for (const mealPlanData of mealPlanDatas) {
+                if (mealPlanData.name === mealPlanName) {
+                    alert("이미 등록된 식단 이름입니다.");
+                    isContinue = true;
+                };
+            };
+        };
+        if (isCancel) return { isCancel: isCancel };
+
+        const mealPlanId = uuidv4();
+
+        const mealPlan = {
+            id: mealPlanId,
+            name: mealPlanName,
+            foods: [],
+        };
+
+        const collectionName = "mealPlans";
+        const docRef = doc(db, collectionName, mealPlan.id);
+        await setDoc(docRef, mealPlan);
+
+        return { isCancel: isCancel, mealPlanId: mealPlanId };
+    };
+
+    const handleClose = async (event) => {
+        let mealPlanId = event.target.returnValue;
+        if (mealPlanId === "close") return;
+        let isCancel = false;
+        if (mealPlanId === "new") {
+            await createMealPlan().then((response) => {
+                isCancel = response.isCancel;
+                console.log("isCancel?", isCancel);
+                if (!isCancel) mealPlanId = response.mealPlanId;
+            });
+        };
+        if (isCancel) return isCancel;
+
+        let mealPlan = {};
+        await getMealPlanDatas().then((response) => {
+            console.log("response:", response);
+            mealPlan = response.find((mealPlanData) => mealPlanData.id === mealPlanId);
+        });
+
+        const collectionName = "mealPlans";
+
+        const foodSize = size !== "" ? size : food.serving_size;
+
+        const data = {id: food.id, size: foodSize};
+
+        mealPlan.foods.push(data);
+        const docRef = doc(db, collectionName, mealPlan.id);
+        await setDoc(docRef, mealPlan);
+
+        alert("등록되었습니다");
+    };
+
+    // 단위 적용
     const setUnit = (nutrient, unit) => {
-        if (nutrient === undefined || nutrient === "-") return "-";
+        if (nutrient === undefined || nutrient === "-" || nutrient === null) return "-";
         return `${nutrient} ${unit}`;
     };
 
-    // 사용자 지정 음식 중량
-    const [size, setSize] = useState(food.serving_size || 100);
-
-    // 1회 섭취참고량 값에서 숫자만 추출하여 size에 저장
-    const setNumberSize = () => {
-        const regex = /[^0-9]/g;
-        setSize(String(size).replace(regex, ""));
-    };
-
-    useEffect(() => {
-        setNumberSize();
-    }, []);
-
-    // 1회 제공량 수정, "-" 입력 안되게 함
+    // 1회 섭취참고량 수정, "-" 입력 안되게 함
     const handleChange = (event) => {
         const value = event.target.value;
         const regex = /^[0-9]+$/;
@@ -49,8 +167,23 @@ function FoodDetail() {
         return Math.round(Number(nutrient) * size / 100 * 100) / 100;
     };
 
+    useEffect(() => console.log(food), []);
+
     return (
         <FoodDetailLayout>
+            <button onClick={handleSaveClick}>담기</button>
+            <MealPlanSelectContainer id="selectModal" onClose={handleClose}>
+                <form method="dialog">
+                    <button value="close">x</button>
+                    담을 식단 선택
+                    <button value="new">새 식단</button>
+                    {mealPlanDatas &&
+                        mealPlanDatas.map((mealPlanData) => (
+                            <button value={mealPlanData.id}>{mealPlanData.name}</button>
+                        ))
+                    }
+                </form>
+            </MealPlanSelectContainer>
             <table>
                 <thead>
                     <tr>
@@ -62,7 +195,7 @@ function FoodDetail() {
                         <td>{food.category}</td>
                         <th>제조사</th>
                         <td>{food.maker}</td>
-                        <th>1회 섭취참고량</th>
+                        <th>1회 섭취참고량(g)</th>
                         <td>{food.serving_size}</td>
                     </tr>
                 </thead>
@@ -70,7 +203,10 @@ function FoodDetail() {
                     <tr>
                         <th>영양성분</th>
                         <th>100 g당 함량</th>
-                        <th><input onChange={handleChange} value={size} /> g당 함량</th>
+                        <th><input
+                            onChange={handleChange}
+                            value={size}
+                            placeholder={food.serving_size} /> g당 함량</th>
                     </tr>
                     <tr>
                         <td>에너지</td>

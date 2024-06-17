@@ -9,6 +9,7 @@ import MealPlanDetail from "./pages/mealPlan/mealPlanDetail.jsx";
 import MainPage from "./pages/MainPage.jsx";
 import FoodLayout from "./pages/Food/foodLayout.jsx";
 import MealPlanLayout from "./pages/mealPlan/mealPlanLayout.jsx";
+import MealPlanUpdate from "./pages/mealPlan/mealPlanUpdate.jsx";
 
 const GlobalStyle = createGlobalStyle`
   ${reset}
@@ -67,6 +68,10 @@ const router = createBrowserRouter([
           {
             path: "detail",
             element: <MealPlanDetail />,
+          },
+          {
+            path: "update",
+            element: <MealPlanUpdate />,
           },
         ]
       },
