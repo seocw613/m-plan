@@ -71,23 +71,6 @@ function MealPlanDetail() {
     // 검색된 식품 정보
     const originalFoodDatas = context.originalFoodDatas;
 
-    // 식단 이름
-    const [mealPlanName, setMealPlanName] = useState(mealPlan.name);
-
-    // 중량 정보
-    const [sizes, setSizes] = useState([]);
-
-    const handleClick = async () => {
-        if (!window.confirm("식단을 삭제하시겠습니까?")) return;
-
-        const collectionName = "mealPlans";
-
-        const docRef = doc(db, collectionName, mealPlan.id);
-        await deleteDoc(docRef);
-
-        navigate("../");
-    };
-
     // 영양성분의 양을 매개변수로 입력하면 사용자가 지정한 음식 중량에 맞춰 변환
     const setAmountPerSize = (food, nutrient) => {
         if (nutrient === undefined || nutrient === "-") return "-";
@@ -96,13 +79,6 @@ function MealPlanDetail() {
 
         return Math.round(Number(nutrient) * size / 100 * 100) / 100;
     };
-    // const setAmountPerSize = (food, nutrient) => {
-    //     if (nutrient === undefined || nutrient === "-" || sizes.length == 0) return "-";
-
-    //     const size = sizes.find((size) => size.id == food.id).size;
-
-    //     return Math.round(Number(nutrient) * size / 100 * 100) / 100;
-    // };
 
     useEffect(() => {
         console.log("foods:", mealPlan.foods);
@@ -123,7 +99,7 @@ function MealPlanDetail() {
 
     return (
         <div>
-            <div>{mealPlanName}</div>
+            {mealPlan.name}
             <Link
                 to="../update"
                 state={{ mealPlan: mealPlan }}>
