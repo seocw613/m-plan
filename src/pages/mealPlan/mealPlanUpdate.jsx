@@ -65,6 +65,8 @@ function MealPlanUpdate() {
     const originalFoodDatas = context.originalFoodDatas;
     // 식단 목록
     const mealPlanDatas = context.mealPlanDatas;
+    // 식단 목록 업데이트
+    const getMealPlanDatas = context.getMealPlanDatas;
     // 식단 정보
     const [mealPlan, setMealPlan] = useState();
 
@@ -179,6 +181,8 @@ function MealPlanUpdate() {
         const mealPlanData = { ...mealPlan, name: mealPlanName, foods: mealPlanFoods };
 
         await setDoc(doc(db, collectionName, mealPlan.id), mealPlanData);
+
+        getMealPlanDatas();
 
         navigate(`../${mealPlanId}`);
     };
