@@ -42,49 +42,49 @@ const router = createBrowserRouter([
     element: <Layout />,
     children: [
       {
-        path: "",
+        path: "/",
         element: <MainPage />,
       },
       {
-        path: "food",
+        path: "/food",
         element: <FoodLayout />,
         children: [
           {
-            path: "/",
+            path: "/food/",
             element: <FoodList />,
           },
           {
-            path: "/detail",
+            path: "/food/detail",
             element: <FoodDetail />,
           },
         ]
       },
-      {
-        path: "signUp",
-        element: <SignUp />,
-      },
-      {
-        path: "SignIn",
-        element: <SignIn />,
-      },
-      {
-        path: "mealPlan",
-        element: <MealPlanLayout />,
-        children: [
-          {
-            path: "/",
-            element: <MealPlanList />,
-          },
-          {
-            path: "/detail",
-            element: <MealPlanDetail />,
-          },
-          {
-            path: "/update",
-            element: <MealPlanUpdate />,
-          },
-        ]
-      },
+      // {
+      //   path: "signUp",
+      //   element: <SignUp />,
+      // },
+      // {
+      //   path: "SignIn",
+      //   element: <SignIn />,
+      // },
+      // {
+      //   path: "mealPlan",
+      //   element: <MealPlanLayout />,
+      //   children: [
+      //     {
+      //       path: "/",
+      //       element: <MealPlanList />,
+      //     },
+      //     {
+      //       path: "/detail",
+      //       element: <MealPlanDetail />,
+      //     },
+      //     {
+      //       path: "/update",
+      //       element: <MealPlanUpdate />,
+      //     },
+      //   ]
+      // },
     ]
   },
 ],
