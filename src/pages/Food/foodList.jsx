@@ -140,7 +140,7 @@ function FoodList() {
         if (isCancel) return isCancel;
 
         const mealPlanId = uuidv4();
-        
+
         const mealPlan = {
             id: mealPlanId,
             name: mealPlanName,
@@ -247,7 +247,7 @@ function FoodList() {
                         <FoodContainer key={food.id}>
                             <FoodTitle>
                                 <Name>
-                                    <Link to="/food/detail" state={{ food: food }}>
+                                    <Link to={`./${food.id}`} state={{ from: "/food/" }}>
                                         {food.name}
                                     </Link>
                                 </Name>

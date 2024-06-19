@@ -1,6 +1,6 @@
 import { collection, doc, getDocs, setDoc } from "firebase/firestore";
 import { useEffect, useRef, useState } from "react";
-import { Link, useLocation, useNavigate, useOutletContext } from "react-router-dom";
+import { Link, useLocation, useNavigate, useOutletContext, useParams } from "react-router-dom";
 import styled from "styled-components";
 import { db } from "../../firebase";
 
@@ -59,20 +59,25 @@ const Nutrients = styled.span`
 function MealPlanUpdate() {
     const navigate = useNavigate();
 
-    const location = useLocation();
-    // const mealPlan = location.state.mealPlan;
-    const [mealPlan, setMealPlan] = useState(location.state.mealPlan);
-
     // OutletContext
     const context = useOutletContext();
     // 검색된 식품 정보
     const originalFoodDatas = context.originalFoodDatas;
+    // 식단 목록
+    const mealPlanDatas = context.mealPlanDatas;
+    // 식단 정보
+    const [mealPlan, setMealPlan] = useState();
 
     // 식단 이름, 불필요한 렌더링 줄이기 위해서 useRef 사용
-    const mealPlanNameRef = useRef(mealPlan.name);
+    const mealPlanNameRef = useRef();
 
     // 중량 정보
-    const [sizes, setSizes] = useState(JSON.parse(JSON.stringify(mealPlan.foods)));
+    const [sizes, setSizes] = useState();
+
+    // 세그먼트 파라미터
+    const params = useParams();
+    // 식단 id
+    const mealPlanId = params.mealPlanId;
 
     // 식단 이름 변경
     const handleMealPlanNameChange = (event) => {
@@ -102,14 +107,14 @@ function MealPlanUpdate() {
     // input에서 변경된 중량 반환
     const getSize = (food) => {
         // 최초 렌더링 시 sizes 안에 값이 없어 공백 사용
-        return sizes.find((size) => size.id === food.id)?.size || "";
+        return sizes?.find((size) => size.id === food.id)?.size || "";
     };
 
     // 영양성분의 양을 매개변수로 입력하면 사용자가 지정한 음식 중량에 맞춰 변환
     const setAmountPerSize = (food, nutrient) => {
-        if (nutrient === undefined || nutrient === "-" || sizes.length === 0) return "-";
+        if (nutrient === undefined || nutrient === "-" || sizes?.length === 0) return "-";
 
-        const size = sizes.find((size) => size.id === food.id).size;
+        const size = sizes?.find((size) => size.id === food.id).size;
 
         return Math.round(Number(nutrient) * size / 100 * 100) / 100;
     };
@@ -175,20 +180,34 @@ function MealPlanUpdate() {
 
         await setDoc(doc(db, collectionName, mealPlan.id), mealPlanData);
 
-        navigate("../detail", { state: { mealPlan: mealPlanData } });
+        navigate(`../${mealPlanId}`);
     };
 
     // 취소, 뒤로가기
     const handleCancelClick = () => {
-        navigate(-1);
+        navigate(`../${mealPlanId}`);
     };
+
+    useEffect(() => {
+        setMealPlan(mealPlanDatas.find((mealPlanData) => mealPlanData.id === mealPlanId));
+    }, [context]);
+
+    useEffect(() => {
+        if (mealPlan === undefined) return;
+        console.log("mealPlan:", mealPlan);
+        // 중량 정보 별도 저장
+        setSizes(JSON.parse(JSON.stringify(mealPlan.foods)));
+        mealPlanNameRef.current.value = mealPlan.name;
+    }, [mealPlan]);
 
     return (
         <div>
-            <input
-                onChange={handleMealPlanNameChange}
-                ref={mealPlanNameRef}
-                defaultValue={mealPlan.name} />
+            {mealPlan &&
+                <input
+                    onChange={handleMealPlanNameChange}
+                    ref={mealPlanNameRef}
+                    defaultValue={mealPlan.name} />
+            }
             <button onClick={handleFoodsDeleteClick}>일괄 삭제</button>
             <FoodListContainer>
                 <FoodContainer className="title">
@@ -205,7 +224,8 @@ function MealPlanUpdate() {
                         <Nutrients>지방(g)</Nutrients>
                     </NutrientsContainer>
                 </FoodContainer>
-                {mealPlan.foods !== undefined
+                {mealPlan
+                    && mealPlan.foods !== undefined
                     && mealPlan.foods.length !== 0
                     && originalFoodDatas !== undefined
                     ? mealPlan.foods.map((food) => {
@@ -217,9 +237,7 @@ function MealPlanUpdate() {
                                 <input className="deleteCheckBox" type="checkbox" value={foodData.id} />
                                 <FoodTitle>
                                     <Name>
-                                        <Link to="/food/detail" state={{ food: foodData }}>
-                                            {foodData.name}
-                                        </Link>
+                                        {foodData.name}
                                     </Name>
                                     <Maker>{foodData.description} | {foodData.maker}</Maker>
                                 </FoodTitle>

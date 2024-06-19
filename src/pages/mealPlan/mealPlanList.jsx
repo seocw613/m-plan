@@ -54,38 +54,14 @@ const Nutrients = styled.span`
 `;
 
 function MealPlanList() {
-    // 식단 목록
-    const [mealPlanDatas, setMealPlanDatas] = useState([]);
-
     // OutletContext
     const context = useOutletContext();
     // 검색된 식품 정보
     const originalFoodDatas = context.originalFoodDatas;
-
+    // 식단 목록
+    const mealPlanDatas = context.mealPlanDatas;
     // 식단 목록 가져오기
-    const getMealPlanDatas = async () => {
-        // firebase collection 이름
-        const collectionName = "mealPlans";
-
-        // 보여줄 식단 id 목록
-        const mealPlanIds = ["test", "test1"];
-
-        // 임시 식단 목록
-        const tmpMealPlanDatas = [];
-
-        // for (const mealPlanId of mealPlanIds) {
-        //     // firstore에서 식단 가져오기
-        //     const docRef = doc(db, collection, mealPlanId);
-        //     const docSnap = await getDoc(docRef);
-        //     tmpMealPlanDatas.push(docSnap.data());
-        // }
-        const querySanpshot = await getDocs(collection(db, collectionName));
-        querySanpshot.forEach((doc) => {
-            tmpMealPlanDatas.push(doc.data());
-        });
-
-        setMealPlanDatas(tmpMealPlanDatas);
-    };
+    const getMealPlanDatas = context.getMealPlanDatas;
 
     // 해당 식단에서 특정 영양성분의 합계를 구해준다
     const getNutrientSummary = (mealPlan, nutirient) => {
@@ -115,10 +91,6 @@ function MealPlanList() {
         getMealPlanDatas();
     };
 
-    useEffect(() => {
-        getMealPlanDatas();
-    }, []);
-
     return (
         <MealPlanListLayout>
             <MealPlanContainer className="title">
@@ -137,7 +109,7 @@ function MealPlanList() {
                     <MealPlanContainer key={mealPlan.id}>
                         <MealPlanTitle>
                             <Name>
-                                <Link to="/mealPlan/detail" state={{ mealPlan: mealPlan }}>
+                                <Link to={`./${mealPlan.id}`}>
                                     {mealPlan.name}
                                 </Link>
                             </Name>

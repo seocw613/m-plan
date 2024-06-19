@@ -1,6 +1,6 @@
 import { deleteDoc, doc } from "firebase/firestore";
 import { useEffect, useRef, useState } from "react";
-import { Link, useLocation, useNavigate, useOutletContext } from "react-router-dom";
+import { Link, useLocation, useNavigate, useOutletContext, useParams } from "react-router-dom";
 import styled from "styled-components";
 import { db } from "../../firebase";
 
@@ -63,19 +63,25 @@ const Nutrients = styled.span`
 function MealPlanDetail() {
     const navigate = useNavigate();
 
-    const location = useLocation();
-    const mealPlan = location.state.mealPlan;
-
     // OutletContext
     const context = useOutletContext();
     // 검색된 식품 정보
     const originalFoodDatas = context.originalFoodDatas;
+    // 식단 목록
+    const mealPlanDatas = context.mealPlanDatas;
+    // 식단 정보
+    const [mealPlan, setMealPlan] = useState();
 
     // 식단 이름
-    const [mealPlanName, setMealPlanName] = useState(mealPlan.name);
+    const [mealPlanName, setMealPlanName] = useState();
 
     // 중량 정보
     const [sizes, setSizes] = useState([]);
+
+    // 세그먼트 파라미터
+    const params = useParams();
+    // 식단 id
+    const mealPlanId = params.mealPlanId;
 
     const handleClick = async () => {
         if (!window.confirm("식단을 삭제하시겠습니까?")) return;
@@ -98,31 +104,29 @@ function MealPlanDetail() {
     };
 
     useEffect(() => {
-        console.log("foods:", mealPlan.foods);
+        setMealPlan(mealPlanDatas.find((mealPlanData) => mealPlanData.id === mealPlanId));
+    }, [context]);
+
+    useEffect(() => {
+        if (mealPlan === undefined) return;
         // 중량 정보 별도 저장
         setSizes([...mealPlan.foods.map((food) => {
             const data = { id: food.id, size: food.size };
             return data;
         })]);
-    }, []);
-
-    useEffect(() => {
-        console.log("rendered");
-    });
-
-    useEffect(() => {
-        console.log(sizes);
-    }, [sizes]);
+        setMealPlanName(mealPlan.name);
+    }, [mealPlan]);
 
     return (
         <div>
             <div>{mealPlanName}</div>
-            <Link
-                to="../update"
-                state={{ mealPlan: mealPlan }}>
+            <Link to="./update">
                 <button>수정</button>
             </Link>
             <button onClick={handleClick}>삭제</button>
+            <Link to="../">
+                <button>목록으로</button>
+            </Link>
             <FoodListContainer>
                 <FoodContainer className="title">
                     <FoodTitle>
@@ -138,18 +142,23 @@ function MealPlanDetail() {
                         <Nutrients>지방(g)</Nutrients>
                     </NutrientsContainer>
                 </FoodContainer>
-                {mealPlan.foods !== undefined
+                {mealPlan
+                    && mealPlan.foods !== undefined
                     && mealPlan.foods.length !== 0
                     && originalFoodDatas !== undefined
                     ? mealPlan.foods.map((food) => {
-                        const foodData = originalFoodDatas
-                            .find((originalFood) => originalFood.id === food.id);
+                        const foodData = {
+                            ...originalFoodDatas
+                                .find((originalFood) => originalFood.id === food.id)
+                        };
                         foodData.serving_size = food.size;
                         return (
                             <FoodContainer key={foodData.id}>
                                 <FoodTitle>
                                     <Name>
-                                        <Link to="/food/detail" state={{ food: foodData }}>
+                                        <Link
+                                            to={`/food/${foodData.id}`}
+                                            state={{ from: `/mealPlan/${mealPlanId}` }}>
                                             {foodData.name}
                                         </Link>
                                     </Name>
@@ -176,6 +185,9 @@ function MealPlanDetail() {
                     : <span>no datas</span>
                 }
             </FoodListContainer>
+            <Link to="../">
+                <button>목록으로</button>
+            </Link>
         </div>
     )
 }

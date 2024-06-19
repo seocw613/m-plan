@@ -1,6 +1,6 @@
 import { collection, doc, getDocs, setDoc } from "firebase/firestore";
 import { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { Link, useLocation, useOutletContext, useParams } from "react-router-dom";
 import styled from "styled-components";
 import { db } from "../../firebase";
 import { v4 as uuidv4 } from "uuid";
@@ -12,14 +12,25 @@ const MealPlanSelectContainer = styled.dialog`
 `;
 
 function FoodDetail() {
+    // OutletContext
+    const context = useOutletContext();
+    // 검색된 식품 정보
+    const foodDatas = context.foodDatas;
+    // 세그먼트 파라미터 값 가져오기
+    const params = useParams();
+    const foodId = params.foodId;
+    const [food, setFood] = useState();
+
+    // location state
     const location = useLocation();
-    const food = location.state.food;
+    // 이전 페이지 저장
+    const from = location.state.from;
 
     // 식단 목록
     const [mealPlanDatas, setMealPlanDatas] = useState();
 
     // 사용자 지정 음식 중량
-    const [size, setSize] = useState(food.serving_size);
+    const [size, setSize] = useState(100);
 
     // 식단 목록 가져오기
     const getMealPlanDatas = async () => {
@@ -130,7 +141,7 @@ function FoodDetail() {
 
         const foodSize = size !== "" ? size : food.serving_size;
 
-        const data = {id: food.id, size: foodSize};
+        const data = { id: food.id, size: foodSize };
 
         mealPlan.foods.push(data);
         const docRef = doc(db, collectionName, mealPlan.id);
@@ -167,10 +178,22 @@ function FoodDetail() {
         return Math.round(Number(nutrient) * size / 100 * 100) / 100;
     };
 
-    useEffect(() => console.log(food), []);
+    useEffect(() => {
+        // 식품 목록에서 해당 식품 정보 가져오기
+        setFood(foodDatas?.find((foodData) => foodData.id === foodId));
+    }, [context]);
+
+    useEffect(() => {
+        // 식품 정보를 성공적으로 가져왔다면 중량 반영
+        if (food === undefined) return;
+        setSize(food.serving_size);
+    }, [food]);
 
     return (
         <FoodDetailLayout>
+            <Link to={from}>
+                <button>뒤로 가기</button>
+            </Link>
             <button onClick={handleSaveClick}>담기</button>
             <MealPlanSelectContainer id="selectModal" onClose={handleClose}>
                 <form method="dialog">
@@ -184,62 +207,64 @@ function FoodDetail() {
                     }
                 </form>
             </MealPlanSelectContainer>
-            <table>
-                <thead>
-                    <tr>
-                        <th>식품명</th>
-                        <td colSpan={5}>{food.name}<span>{food.description}</span></td>
-                    </tr>
-                    <tr>
-                        <th>분류</th>
-                        <td>{food.category}</td>
-                        <th>제조사</th>
-                        <td>{food.maker}</td>
-                        <th>1회 섭취참고량(g)</th>
-                        <td>{food.serving_size}</td>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <th>영양성분</th>
-                        <th>100 g당 함량</th>
-                        <th><input
-                            onChange={handleChange}
-                            value={size}
-                            placeholder={food.serving_size} /> g당 함량</th>
-                    </tr>
-                    <tr>
-                        <td>에너지</td>
-                        <td>{setUnit(food.calorie, "kcal")}</td>
-                        <td>{setUnit(setAmountPerSize(food.calorie), "kcal")}</td>
-                    </tr>
-                    <tr>
-                        <td>탄수화물</td>
-                        <td>{setUnit(food.carbohydrate, "g")}</td>
-                        <td>{setUnit(setAmountPerSize(food.carbohydrate), "g")}</td>
-                    </tr>
-                    <tr>
-                        <td>단백질</td>
-                        <td>{setUnit(food.protein, "g")}</td>
-                        <td>{setUnit(setAmountPerSize(food.protein), "g")}</td>
-                    </tr>
-                    <tr>
-                        <td>지방</td>
-                        <td>{setUnit(food.fat, "g")}</td>
-                        <td>{setUnit(setAmountPerSize(food.fat), "g")}</td>
-                    </tr>
-                    <tr>
-                        <td>당류</td>
-                        <td>{setUnit(food.saccaride, "g")}</td>
-                        <td>{setUnit(setAmountPerSize(food.saccaride), "g")}</td>
-                    </tr>
-                    <tr>
-                        <td>나트륨</td>
-                        <td>{setUnit(food.sodium, "mg")}</td>
-                        <td>{setUnit(setAmountPerSize(food.sodium), "mg")}</td>
-                    </tr>
-                </tbody>
-            </table>
+            {food &&
+                <table>
+                    <thead>
+                        <tr>
+                            <th>식품명</th>
+                            <td colSpan={5}>{food.name}<span>{food.description}</span></td>
+                        </tr>
+                        <tr>
+                            <th>분류</th>
+                            <td>{food.category}</td>
+                            <th>제조사</th>
+                            <td>{food.maker}</td>
+                            <th>1회 섭취참고량(g)</th>
+                            <td>{food.serving_size}</td>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th>영양성분</th>
+                            <th>100 g당 함량</th>
+                            <th><input
+                                onChange={handleChange}
+                                value={size}
+                                placeholder={food.serving_size || 100} /> g당 함량</th>
+                        </tr>
+                        <tr>
+                            <td>에너지</td>
+                            <td>{setUnit(food.calorie, "kcal")}</td>
+                            <td>{setUnit(setAmountPerSize(food.calorie), "kcal")}</td>
+                        </tr>
+                        <tr>
+                            <td>탄수화물</td>
+                            <td>{setUnit(food.carbohydrate, "g")}</td>
+                            <td>{setUnit(setAmountPerSize(food.carbohydrate), "g")}</td>
+                        </tr>
+                        <tr>
+                            <td>단백질</td>
+                            <td>{setUnit(food.protein, "g")}</td>
+                            <td>{setUnit(setAmountPerSize(food.protein), "g")}</td>
+                        </tr>
+                        <tr>
+                            <td>지방</td>
+                            <td>{setUnit(food.fat, "g")}</td>
+                            <td>{setUnit(setAmountPerSize(food.fat), "g")}</td>
+                        </tr>
+                        <tr>
+                            <td>당류</td>
+                            <td>{setUnit(food.saccaride, "g")}</td>
+                            <td>{setUnit(setAmountPerSize(food.saccaride), "g")}</td>
+                        </tr>
+                        <tr>
+                            <td>나트륨</td>
+                            <td>{setUnit(food.sodium, "mg")}</td>
+                            <td>{setUnit(setAmountPerSize(food.sodium), "mg")}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            }
         </FoodDetailLayout>
     )
 }
