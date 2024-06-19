@@ -46,15 +46,15 @@ const router = createBrowserRouter([
         element: <MainPage />,
       },
       {
-        path: "food/",
+        path: "food",
         element: <FoodLayout />,
         children: [
           {
-            path: "",
+            path: "/",
             element: <FoodList />,
           },
           {
-            path: "detail",
+            path: "/detail",
             element: <FoodDetail />,
           },
         ]
@@ -68,19 +68,19 @@ const router = createBrowserRouter([
         element: <SignIn />,
       },
       {
-        path: "mealPlan/",
+        path: "mealPlan",
         element: <MealPlanLayout />,
         children: [
           {
-            path: "",
+            path: "/",
             element: <MealPlanList />,
           },
           {
-            path: "detail",
+            path: "/detail",
             element: <MealPlanDetail />,
           },
           {
-            path: "update",
+            path: "/update",
             element: <MealPlanUpdate />,
           },
         ]
