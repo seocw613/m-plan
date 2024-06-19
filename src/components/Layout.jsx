@@ -1,11 +1,17 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
-import { Link, Outlet } from "react-router-dom";
+import { Link, Outlet, useNavigate } from "react-router-dom";
 import styled from "styled-components";
+import { auth, db } from "../firebase";
+import { AuthCredential, signOut } from "firebase/auth";
+import GithubLink from "./User/githubLink";
+import { collection, getDocs, query, where } from "firebase/firestore";
 
 const Wrapper = styled.nav``;
 
 function Layout() {
+    const navigate = useNavigate();
+
     // 식품 정보
     const [originalFoodDatas, setOriginalFoodDatas] = useState();
     // 검색된 식품 정보
@@ -16,6 +22,41 @@ function Layout() {
         const savedPage = sessionStorage.getItem("page");
         return savedPage ? JSON.parse(savedPage) : 1;
     });
+
+    // 사용자 정보
+    const [user, setUser] = useState(auth.currentUser);
+
+    // 사용자의 db 정보
+    const [userDb, setUserDb] = useState();
+
+    // 사용자 db 정보 가져오기
+    const getUserDb = async () => {
+        const collectionName = "users";
+        const email = user.email;
+        const q = query(collection(db, collectionName), where("email", "==", email));
+        const querySnapshot = await getDocs(q);
+        setUserDb(querySnapshot.docs[0].data());
+        console.log("userDb:", userDb);
+    };
+
+    // 사용자 정보 확인
+    const handleCheckUserClick = () => {
+        console.log("user:", auth.currentUser);
+        console.log("UID:", auth.currentUser.uid);
+        console.log("credential:", new AuthCredential());
+    };
+
+    // 로그아웃
+    const handleSignOutClick = () => {
+        signOut(auth).then(() => {
+            alert("로그아웃 되었습니다.");
+            navigate("/");
+        }).catch((error) => {
+            const errorCode = error.code;
+            const errorMessage = error.message;
+            console.log("Error ", errorCode, ": ", errorMessage);
+        });
+    };
 
     // json 파일 불러오기
     useEffect(() => {
@@ -41,6 +82,11 @@ function Layout() {
             .catch((error) => {
                 console.error("Error fetching JSON files:", error);
             });
+        // 로그인된 사용자 정보 가져오기
+        if (auth.currentUser) getUserDb();
+        console.log("rendered");
+        console.log("auth user:", auth.currentUser);
+        console.log("user:", user);
     }, []);
 
     useEffect(() => {
@@ -59,7 +105,25 @@ function Layout() {
                 <Link to="/">Main Page</Link>{"\t"}
                 <Link to="/food/">Food</Link>{"\t"}
                 <Link to="/mealPlan/">Meal Plan</Link>{"\t"}
+                {auth.currentUser
+                    ? null
+                    : <>
+                        <Link to="/signIn">로그인</Link>{"\t"}
+                        <Link to="/signUp">회원가입</Link>{"\t"}
+                    </>
+                }
             </nav>
+            {auth.currentUser
+                ? <div>
+                    <button onClick={handleCheckUserClick}>사용자 정보</button>
+                    {userDb
+                        ? <GithubLink />
+                        : null
+                    }
+                    <button onClick={handleSignOutClick}>로그아웃</button>
+                </div>
+                : null
+            }
             <Outlet context={{ originalFoodDatas, foodDatas, page, setFoodDatas, setSessionPage }} />
         </Wrapper>
     );

@@ -1,15 +1,17 @@
 import { createGlobalStyle } from "styled-components";
 import { reset } from "styled-reset";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import FoodDetail from "./pages/Food/foodDetail.jsx";
-import FoodList from "./pages/Food/foodList.jsx";
 import Layout from "./components/Layout.jsx";
-import MealPlanList from "./pages/mealPlan/mealPlanList.jsx";
-import MealPlanDetail from "./pages/mealPlan/mealPlanDetail.jsx";
 import MainPage from "./pages/MainPage.jsx";
 import FoodLayout from "./pages/Food/foodLayout.jsx";
-import MealPlanLayout from "./pages/mealPlan/mealPlanLayout.jsx";
-import MealPlanUpdate from "./pages/mealPlan/mealPlanUpdate.jsx";
+import FoodList from "./pages/Food/foodList.jsx";
+import FoodDetail from "./pages/Food/foodDetail.jsx";
+import MealPlanLayout from "./pages/MealPlan/mealPlanLayout.jsx";
+import MealPlanList from "./pages/MealPlan/mealPlanList.jsx";
+import MealPlanDetail from "./pages/MealPlan/mealPlanDetail.jsx";
+import MealPlanUpdate from "./pages/MealPlan/mealPlanUpdate.jsx";
+import SignUp from "./pages/User/signUp.jsx";
+import SignIn from "./pages/User/signIn.jsx";
 
 const GlobalStyle = createGlobalStyle`
   ${reset}
@@ -56,6 +58,14 @@ const router = createBrowserRouter([
             element: <FoodDetail />,
           },
         ]
+      },
+      {
+        path: "signUp",
+        element: <SignUp />,
+      },
+      {
+        path: "SignIn",
+        element: <SignIn />,
       },
       {
         path: "mealPlan/",
