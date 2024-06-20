@@ -4,7 +4,6 @@ import SearchBar from "../../components/SearchBar";
 
 const Layout = styled.div``;
 
-// function FoodLayout({ originalFoodDatas, foodDatas, page, setFoodDatas, setSessionPage }) {
 function FoodLayout() {
     // OutletContext
     const context = useOutletContext();

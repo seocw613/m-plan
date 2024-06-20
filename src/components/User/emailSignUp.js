@@ -26,7 +26,7 @@ const Message = styled.div`
 `;
 
 
-function EmailSignUp() {
+function EmailSignUp({ setUser }) {
     const navigate = useNavigate();
     const [message, setMessage] = useState();
     const [errorMessage, setErrorMessage] = useState();
@@ -177,7 +177,6 @@ function EmailSignUp() {
         if (displayName === "") displayName = null;
         createUserWithEmailAndPassword(auth, email, password)
             .then(async (userCredential) => {
-                console.log("credential:", userCredential);
                 // Signed in
                 const user = userCredential.user;
                 // UID 저장
@@ -191,11 +190,15 @@ function EmailSignUp() {
                     UID: UID,
                     displayName: displayName,
                     email: email,
-                    loginMethod: loginMethod,
+                    loginMethods: [loginMethod],
                 };
                 await setDoc(docRef, userData);
 
-                alert("회원가입되었습니다.");
+                alert("회원가입 되었습니다.");
+                // 로컬 스토리지에 사용자 정보 저장
+                delete userData.UID;
+                localStorage.setItem("user", JSON.stringify(userData));
+                setUser(userData);
                 // 로그인 페이지로 이동
                 navigate("/");
             })

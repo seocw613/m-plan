@@ -12,6 +12,7 @@ import MealPlanDetail from "./pages/MealPlan/mealPlanDetail.jsx";
 import MealPlanUpdate from "./pages/MealPlan/mealPlanUpdate.jsx";
 import SignUp from "./pages/User/signUp.jsx";
 import SignIn from "./pages/User/signIn.jsx";
+import UserLayout from "./pages/User/userLayout.jsx";
 
 const GlobalStyle = createGlobalStyle`
   ${reset}
@@ -42,45 +43,51 @@ const router = createBrowserRouter([
     element: <Layout />,
     children: [
       {
-        path: "/",
+        path: "",
         element: <MainPage />,
       },
       {
-        path: "/food",
+        path: "food/",
         element: <FoodLayout />,
         children: [
           {
-            path: "/food/",
+            path: "",
             element: <FoodList />,
           },
           {
-            path: "/food/:foodId",
+            path: ":foodId",
             element: <FoodDetail />,
           },
         ]
       },
       {
-        path: "/signUp",
-        element: <SignUp />,
+        path: "user/",
+        element: <UserLayout />,
+        children: [
+          {
+            path: "signUp",
+            element: <SignUp />,
+          },
+          {
+            path: "signIn",
+            element: <SignIn />,
+          },
+        ]
       },
       {
-        path: "/signIn",
-        element: <SignIn />,
-      },
-      {
-        path: "/mealPlan",
+        path: "mealPlan/",
         element: <MealPlanLayout />,
         children: [
           {
-            path: "/mealPlan/",
+            path: "",
             element: <MealPlanList />,
           },
           {
-            path: "/mealPlan/:mealPlanId",
+            path: ":mealPlanId",
             element: <MealPlanDetail />,
           },
           {
-            path: "/mealPlan/:mealPlanId/update",
+            path: ":mealPlanId/update",
             element: <MealPlanUpdate />,
           },
         ]
@@ -88,9 +95,9 @@ const router = createBrowserRouter([
     ]
   },
 ],
-{
-  basename: "/m-plan",
-});
+  {
+    basename: "/m-plan",
+  });
 
 function App() {
   return (

@@ -23,21 +23,8 @@ function Layout() {
         return savedPage ? JSON.parse(savedPage) : 1;
     });
 
-    // 사용자 정보
-    const [user, setUser] = useState(auth.currentUser);
-
     // 사용자의 db 정보
-    const [userDb, setUserDb] = useState();
-
-    // 사용자 db 정보 가져오기
-    const getUserDb = async () => {
-        const collectionName = "users";
-        const email = user.email;
-        const q = query(collection(db, collectionName), where("email", "==", email));
-        const querySnapshot = await getDocs(q);
-        setUserDb(querySnapshot.docs[0].data());
-        console.log("userDb:", userDb);
-    };
+    const [user, setUser] = useState(JSON.parse(localStorage.getItem("user")));
 
     // 사용자 정보 확인
     const handleCheckUserClick = () => {
@@ -50,6 +37,8 @@ function Layout() {
     const handleSignOutClick = () => {
         signOut(auth).then(() => {
             alert("로그아웃 되었습니다.");
+            localStorage.removeItem("user");
+            setUser();
             navigate("/");
         }).catch((error) => {
             const errorCode = error.code;
@@ -83,7 +72,6 @@ function Layout() {
                 console.error("Error fetching JSON files:", error);
             });
         // 로그인된 사용자 정보 가져오기
-        if (auth.currentUser) getUserDb();
         console.log("rendered");
         console.log("auth user:", auth.currentUser);
         console.log("user:", user);
@@ -105,26 +93,26 @@ function Layout() {
                 <Link to="/">Main Page</Link>{"\t"}
                 <Link to="/food/">Food</Link>{"\t"}
                 <Link to="/mealPlan/">Meal Plan</Link>{"\t"}
-                {auth.currentUser
+                {user
                     ? null
                     : <>
-                        <Link to="/signIn">로그인</Link>{"\t"}
-                        <Link to="/signUp">회원가입</Link>{"\t"}
+                        <Link to="/user/signIn">로그인</Link>{"\t"}
+                        <Link to="/user/signUp">회원가입</Link>{"\t"}
                     </>
                 }
             </nav>
-            {auth.currentUser
+            {user
                 ? <div>
                     <button onClick={handleCheckUserClick}>사용자 정보</button>
-                    {userDb
-                        ? <GithubLink />
-                        : null
+                    {user?.loginMethods?.some((method) => method === "github")
+                        ? null
+                        : <GithubLink />
                     }
                     <button onClick={handleSignOutClick}>로그아웃</button>
                 </div>
                 : null
             }
-            <Outlet context={{ originalFoodDatas, foodDatas, page, setFoodDatas, setSessionPage }} />
+            <Outlet context={{ originalFoodDatas, foodDatas, page, setFoodDatas, setSessionPage, setUser }} />
         </Wrapper>
     );
 }

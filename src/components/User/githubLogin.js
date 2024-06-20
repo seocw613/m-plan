@@ -3,7 +3,7 @@ import { auth, db } from "../../firebase";
 import { useNavigate } from "react-router-dom";
 import { collection, doc, getDocs, query, setDoc, where } from "firebase/firestore";
 
-function GithubLogin() {
+function GithubLogin({ setUser }) {
     const navigate = useNavigate();
 
     const handleClick = () => {
@@ -21,6 +21,8 @@ function GithubLogin() {
                 const email = user.email;
                 const q = query(collection(db, collectionName), where("email", "==", email));
                 const querySnapshot = await getDocs(q);
+                // 사용자 정보 저장
+                let userData = querySnapshot.docs[0]?.data();
                 // 없다면 db에 등록
                 if (querySnapshot.docs.length === 0) {
                     // UID 저장
@@ -29,14 +31,17 @@ function GithubLogin() {
                     const loginMethod = "github";
                     // db에 등록
                     const docRef = doc(db, collectionName, UID);
-                    const userData = {
+                    userData = {
                         UID: UID,
                         displayName: user.displayName,
                         email: email,
-                        loginMethod: [loginMethod],
+                        loginMethods: [loginMethod],
                     };
                     await setDoc(docRef, userData);
                 };
+                // 로컬 스토리지에 사용자 정보 저장
+                localStorage.setItem("user", JSON.stringify(userData));
+                setUser(userData);
                 // 메인 페이지로 이동
                 navigate("/");
             }).catch(async (error) => {
@@ -55,7 +60,8 @@ function GithubLogin() {
                     const collectionName = "users";
                     const q = query(collection(db, collectionName), where("email", "==", email));
                     const querySnapshot = await getDocs(q);
-                    const methods = querySnapshot.docs[0].data().loginMethod;
+                    const userData = querySnapshot.docs[0].data();
+                    const methods = userData.loginMethods;
                     // 로그인 방법에 따라 진행 여부 확인
                     let isContinue = false;
                     let password = "";
@@ -69,7 +75,11 @@ function GithubLogin() {
                                     signInWithEmailAndPassword(auth, email, password).then((result) => {
                                         // 깃허브 연동
                                         return linkWithCredential(result.user, credential);
-                                    }).then(() => {
+                                    }).then(async () => {
+                                        // 사용자 정보 업데이트
+                                        userData.loginMethods.push("github");
+                                        await setDoc(doc(db, collectionName, userData.UID), userData);
+                                        // 메인 페이지로 이동
                                         navigate("/");
                                     });
                                 };
