@@ -1,5 +1,5 @@
 import { useOutletContext } from "react-router-dom";
-import EmailSignIn from "../../components/User/emailSignin";
+import EmailSignIn from "../../components/User/emailSignIn";
 
 function SignIn() {
     // OutletContext

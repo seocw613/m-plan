@@ -1,6 +1,8 @@
 import { useOutletContext } from "react-router-dom";
 import EmailSignUp from "../../components/User/emailSignUp";
-import GithubLogin from "../../components/User/githubLogin";
+import GithubSignIn from "../../components/User/githubSignIn";
+import NaverSignIn from "../../components/User/naverSignIn";
+import KakaoSignIn from "../../components/User/kakaoSignIn";
 
 function SignUp() {
     // OutletContext
@@ -13,7 +15,9 @@ function SignUp() {
             회원가입
             <EmailSignUp setUser={setUser} />
             <div>
-                <GithubLogin setUser={setUser} />
+                <GithubSignIn setUser={setUser} />
+                <NaverSignIn setUser={setUser} />
+                <KakaoSignIn setUser={setUser} />
             </div>
         </div>
     );

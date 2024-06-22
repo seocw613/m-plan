@@ -8,12 +8,12 @@ import { browserLocalPersistence, getAuth, setPersistence } from "firebase/auth"
 
 // API key
 const config = require("./config");
-const firebaseKey = config.firebaseKey;
+const FIREBASE_KEY = config.FIREBASE_KEY;
 
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: firebaseKey,
+  apiKey: FIREBASE_KEY,
   authDomain: "m-plan-ca6db.firebaseapp.com",
   projectId: "m-plan-ca6db",
   storageBucket: "m-plan-ca6db.appspot.com",

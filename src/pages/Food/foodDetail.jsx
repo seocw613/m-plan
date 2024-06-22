@@ -23,8 +23,8 @@ function FoodDetail() {
 
     // location state
     const location = useLocation();
-    // 이전 페이지 저장
-    const from = location.state.from;
+    // 이전 페이지 저장, url 입력으로 들어온 경우 식품 목록으로 이동
+    const from = location.state?.from || "../";
 
     // 식단 목록
     const [mealPlanDatas, setMealPlanDatas] = useState();

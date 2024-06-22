@@ -151,7 +151,6 @@ function EmailSignUp({ setUser }) {
         await handleEmailBlur(email);
         // 이메일 적합 여부 확인
         if (!isEmailAccept) {
-            console.log("email");
             event.target.email.focus();
             const content = "·이메일: 생성 규칙을 확인해주세요.";
             setErrorMessage(content);
@@ -159,7 +158,6 @@ function EmailSignUp({ setUser }) {
         };
         // 비밀번호 적합 여부 확인
         if (!isPasswordAccept) {
-            console.log("password");
             event.target.password.focus();
             const content = "·비밀번호: 생성 규칙을 확인해주세요.";
             setErrorMessage(content);
@@ -167,7 +165,6 @@ function EmailSignUp({ setUser }) {
         };
         // 닉네임 적합 여부 확인
         if (!isDisplayNameAccept) {
-            console.log("display name");
             event.target.displayName.focus();
             const content = "·닉네임: 생성 규칙을 확인해주세요.";
             setErrorMessage(content);

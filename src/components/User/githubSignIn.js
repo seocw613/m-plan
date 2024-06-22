@@ -3,7 +3,7 @@ import { auth, db } from "../../firebase";
 import { useNavigate } from "react-router-dom";
 import { collection, doc, getDocs, query, setDoc, where } from "firebase/firestore";
 
-function GithubLogin({ setUser }) {
+function GithubSignIn({ setUser }) {
     const navigate = useNavigate();
 
     const handleClick = () => {
@@ -40,6 +40,7 @@ function GithubLogin({ setUser }) {
                     await setDoc(docRef, userData);
                 };
                 // 로컬 스토리지에 사용자 정보 저장
+                delete userData.UID;
                 localStorage.setItem("user", JSON.stringify(userData));
                 setUser(userData);
                 // 메인 페이지로 이동
@@ -97,4 +98,4 @@ function GithubLogin({ setUser }) {
     );
 }
 
-export default GithubLogin;
+export default GithubSignIn;

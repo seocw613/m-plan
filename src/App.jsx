@@ -13,6 +13,8 @@ import MealPlanUpdate from "./pages/MealPlan/mealPlanUpdate.jsx";
 import SignUp from "./pages/User/signUp.jsx";
 import SignIn from "./pages/User/signIn.jsx";
 import UserLayout from "./pages/User/userLayout.jsx";
+import NaverSignInCallback from "./components/User/naverSignInCallback.js";
+import KakaoSignInCallback from "./components/User/kakaoSignInCallback.js";
 
 const GlobalStyle = createGlobalStyle`
   ${reset}
@@ -71,6 +73,14 @@ const router = createBrowserRouter([
           {
             path: "signIn",
             element: <SignIn />,
+          },
+          {
+            path: "naverSignInCallback",
+            element: <NaverSignInCallback />,
+          },
+          {
+            path: "kakaoSignInCallback",
+            element: <KakaoSignInCallback />,
           },
         ]
       },
