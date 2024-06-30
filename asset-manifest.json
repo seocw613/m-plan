@@ -1,10 +1,11 @@
 {
   "files": {
-    "main.js": "/m-plan/static/js/main.c659b4d2.js",
+    "main.js": "/m-plan/static/js/main.f7f74709.js",
     "index.html": "/m-plan/index.html",
-    "main.c659b4d2.js.map": "/m-plan/static/js/main.c659b4d2.js.map"
+    "static/media/github-mark.svg": "/m-plan/static/media/github-mark.6fa18895f6e6c7772cab7049f7e05f59.svg",
+    "main.f7f74709.js.map": "/m-plan/static/js/main.f7f74709.js.map"
   },
   "entrypoints": [
-    "static/js/main.c659b4d2.js"
+    "static/js/main.f7f74709.js"
   ]
 }
