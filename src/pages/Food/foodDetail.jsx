@@ -1,15 +1,15 @@
 import { collection, doc, getDocs, setDoc } from "firebase/firestore";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { Link, useLocation, useOutletContext, useParams } from "react-router-dom";
 import styled from "styled-components";
 import { db } from "../../firebase";
 import { v4 as uuidv4 } from "uuid";
+import { MealPlanContext } from "../../contexts/MealPlanContext.js";
+import { UserContext } from "../../contexts/UserContext.js";
+import MealPlanModal from "../../components/MealPlan/MealPlanModal.js";
+import { MessageContext } from "../../contexts/MessageContext.js";
 
 const FoodDetailLayout = styled.div``;
-
-const MealPlanSelectContainer = styled.dialog`
-    margin: auto;
-`;
 
 function FoodDetail() {
     // OutletContext
@@ -24,130 +24,25 @@ function FoodDetail() {
     // location state
     const location = useLocation();
     // 이전 페이지 저장, url 입력으로 들어온 경우 식품 목록으로 이동
-    const from = location.state?.from || "../";
+    const from = location.state?.from || "/food";
 
+    // 알림 메시지 추가
+    const { addMessage } = useContext(MessageContext);
+    // 로그인 여부 확인
+    const { user, setSessionUser, checkSignIn } = useContext(UserContext);
     // 식단 목록
-    const [mealPlanDatas, setMealPlanDatas] = useState();
+    const { mealPlanDatas } = useContext(MealPlanContext);
 
     // 사용자 지정 음식 중량
     const [size, setSize] = useState(100);
 
-    // 식단 목록 가져오기
-    const getMealPlanDatas = async () => {
-        // firebase collection 이름
-        const collectionName = "mealPlans";
-
-        // 보여줄 식단 id 목록
-        const mealPlanDataIds = ["test", "test1"];
-
-        // 임시 식단 목록
-        const tmpMealPlanDatas = [];
-
-        // for (const mealPlanDataId of mealPlanDataIds) {
-        //     // firstore에서 식단 가져오기
-        //     const docRef = doc(db, collection, mealPlanDataId);
-        //     const docSnap = await getDoc(docRef);
-        //     tmpMealPlanDatas.push(docSnap.data());
-        // }
-        const querySanpshot = await getDocs(collection(db, collectionName));
-        querySanpshot.forEach((doc) => {
-            tmpMealPlanDatas.push(doc.data());
-        });
-
-        setMealPlanDatas(tmpMealPlanDatas);
-
-        return tmpMealPlanDatas;
-    };
-
     // 식단에 식품 저장
-    const handleSaveClick = () => {
-        const foodSize = size !== "" ? Number(size) : food.serving_size;
-        const data = { id: food.id, size: food.size };
-
-        const collectionName = "mealPlans";
-
-        getMealPlanDatas();
-
-        const selectModal = document.getElementById("selectModal");
+    const handleAddFoodToMealPlan = () => {
+        // 로그인 여부 확인
+        if (!checkSignIn()) return addMessage("로그인 후 이용해주세요.");
+        // 모달창 띄우기
+        const selectModal = document.getElementById(`selectModal${foodId}`);
         selectModal.showModal();
-    };
-
-    // 새 식단 생성
-    const createMealPlan = async () => {
-        // 식단 이름
-        let mealPlanName = "";
-
-        // 프롬프트 안내 문구
-        let promptText = "새 식단의 이름을 입력해주세요\n최소 1, 최대 20글자";
-        let isContinue = true;
-        let isCancel = false;
-        // 식단 이름 받기
-        while (isContinue) {
-            mealPlanName = prompt(promptText);
-            if (mealPlanName === null) {
-                isCancel = true;
-                break;
-            };
-            isContinue = false;
-            if (mealPlanName.length < 1 || mealPlanName.length > 20) isContinue = true;
-            if (mealPlanName === "새 식단") {
-                alert("해당 이름은 사용할 수 없습니다.");
-                isContinue = true;
-            };
-            for (const mealPlanData of mealPlanDatas) {
-                if (mealPlanData.name === mealPlanName) {
-                    alert("이미 등록된 식단 이름입니다.");
-                    isContinue = true;
-                };
-            };
-        };
-        if (isCancel) return { isCancel: isCancel };
-
-        const mealPlanId = uuidv4();
-
-        const mealPlan = {
-            id: mealPlanId,
-            name: mealPlanName,
-            foods: [],
-        };
-
-        const collectionName = "mealPlans";
-        const docRef = doc(db, collectionName, mealPlan.id);
-        await setDoc(docRef, mealPlan);
-
-        return { isCancel: isCancel, mealPlanId: mealPlanId };
-    };
-
-    const handleClose = async (event) => {
-        let mealPlanId = event.target.returnValue;
-        if (mealPlanId === "close") return;
-        let isCancel = false;
-        if (mealPlanId === "new") {
-            await createMealPlan().then((response) => {
-                isCancel = response.isCancel;
-                console.log("isCancel?", isCancel);
-                if (!isCancel) mealPlanId = response.mealPlanId;
-            });
-        };
-        if (isCancel) return isCancel;
-
-        let mealPlan = {};
-        await getMealPlanDatas().then((response) => {
-            console.log("response:", response);
-            mealPlan = response.find((mealPlanData) => mealPlanData.id === mealPlanId);
-        });
-
-        const collectionName = "mealPlans";
-
-        const foodSize = size !== "" ? size : food.serving_size;
-
-        const data = { id: food.id, size: foodSize };
-
-        mealPlan.foods.push(data);
-        const docRef = doc(db, collectionName, mealPlan.id);
-        await setDoc(docRef, mealPlan);
-
-        alert("등록되었습니다");
     };
 
     // 단위 적용
@@ -181,7 +76,7 @@ function FoodDetail() {
     useEffect(() => {
         // 식품 목록에서 해당 식품 정보 가져오기
         setFood(foodDatas?.find((foodData) => foodData.id === foodId));
-    }, [context]);
+    }, [foodDatas]);
 
     useEffect(() => {
         // 식품 정보를 성공적으로 가져왔다면 중량 반영
@@ -194,19 +89,8 @@ function FoodDetail() {
             <Link to={from}>
                 <button>뒤로 가기</button>
             </Link>
-            <button onClick={handleSaveClick}>담기</button>
-            <MealPlanSelectContainer id="selectModal" onClose={handleClose}>
-                <form method="dialog">
-                    <button value="close">x</button>
-                    담을 식단 선택
-                    <button value="new">새 식단</button>
-                    {mealPlanDatas &&
-                        mealPlanDatas.map((mealPlanData) => (
-                            <button value={mealPlanData.id}>{mealPlanData.name}</button>
-                        ))
-                    }
-                </form>
-            </MealPlanSelectContainer>
+            <button onClick={handleAddFoodToMealPlan}>담기</button>
+            <MealPlanModal foodId={foodId} serving_size={size !== "" ? size : food.serving_size} />
             {food &&
                 <table>
                     <thead>

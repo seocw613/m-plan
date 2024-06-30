@@ -1,4 +1,4 @@
-import EmailVerification from "../../components/User/emailVerification";
+import EmailVerification from "../../components/User/EmailVerification";
 
 function Verification() {
     return (

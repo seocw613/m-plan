@@ -1,8 +1,11 @@
-import { deleteDoc, doc } from "firebase/firestore";
-import { useEffect, useRef, useState } from "react";
+import { deleteDoc, doc, setDoc } from "firebase/firestore";
+import { useContext, useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate, useOutletContext, useParams } from "react-router-dom";
 import styled from "styled-components";
 import { db } from "../../firebase";
+import { MealPlanContext } from "../../contexts/MealPlanContext";
+import { MessageContext } from "../../contexts/MessageContext";
+import { UserContext } from "../../contexts/UserContext";
 
 const Form = styled.form`
     display: none;
@@ -62,21 +65,22 @@ const Nutrients = styled.span`
 
 function MealPlanDetail() {
     const navigate = useNavigate();
-
     // OutletContext
     const context = useOutletContext();
     // 검색된 식품 정보
     const originalFoodDatas = context.originalFoodDatas;
     // 식단 목록
-    const mealPlanDatas = context.mealPlanDatas;
+    const { mealPlanDatas } = useContext(MealPlanContext);
     // 식단 정보
     const [mealPlan, setMealPlan] = useState();
-
     // 식단 이름
     const [mealPlanName, setMealPlanName] = useState();
-
     // 중량 정보
     const [sizes, setSizes] = useState([]);
+    // 알림 메시지 추가
+    const { addMessage } = useContext(MessageContext);
+    // 현재 사용자 정보, 현재 사용자 업데이트
+    const { user, setSessionUser } = useContext(UserContext);
 
     // 세그먼트 파라미터
     const params = useParams();
@@ -85,13 +89,16 @@ function MealPlanDetail() {
 
     const handleClick = async () => {
         if (!window.confirm("식단을 삭제하시겠습니까?")) return;
-
-        const collectionName = "mealPlans";
-
-        const docRef = doc(db, collectionName, mealPlan.id);
-        await deleteDoc(docRef);
-
-        navigate("../");
+        // 식단 DB에서 식단 삭제
+        const mealPlanCollectionName = "mealPlans";
+        await deleteDoc(doc(db, mealPlanCollectionName, mealPlan.id));
+        // 사용자 DB에서 식단 id 삭제
+        const mealPlanIds = user.mealPlanIds.filter((id) => id !== mealPlanId);
+        const userData = { ...user, mealPlanIds: mealPlanIds };
+        const userCollectionName = "users";
+        await setDoc(doc(db, userCollectionName, user.UID), userData);
+        // 현재 사용자 정보 업데이트
+        setSessionUser(userData);
     };
 
     // 영양성분의 양을 매개변수로 입력하면 사용자가 지정한 음식 중량에 맞춰 변환
@@ -104,7 +111,18 @@ function MealPlanDetail() {
     };
 
     useEffect(() => {
-        setMealPlan(mealPlanDatas.find((mealPlanData) => mealPlanData.id === mealPlanId));
+        // 선택한 식단 가져오기
+        const tmpMealPlan = mealPlanDatas.find((mealPlanData) => mealPlanData.id === mealPlanId);
+        // 선택한 식단이 식단 목록에 없는 경우 메인 페이지로 이동
+        // 식단 ID를 URL에 직접 입력하는 경우 등
+        if (tmpMealPlan === undefined) {
+            // 알림 메시지 추가
+            addMessage("잘못된 접근입니다.");
+            // 메인 페이지로 이동
+            navigate("/");
+            return;
+        };
+        setMealPlan();
     }, [context]);
 
     useEffect(() => {
@@ -151,7 +169,8 @@ function MealPlanDetail() {
                             ...originalFoodDatas
                                 .find((originalFood) => originalFood.id === food.id)
                         };
-                        foodData.serving_size = food.size;
+                        // 깊은 복사
+                        foodData.serving_size = Number(food.size);
                         return (
                             <FoodContainer key={foodData.id}>
                                 <FoodTitle>

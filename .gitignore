@@ -18,7 +18,15 @@
 .env.test.local
 .env.production.local
 /src/config.js
-/src/components/User/googleLogin.js
+# 이메일 인증
+/src/components/User/EmailVerification.js
+/src/pages/User/Verification.jsx
+# OAuth 관련 이메일 로그인
+/src/components/User/GoogleLogin.js
+/src/components/User/KakaoSignIn.js
+/src/components/User/KakaoSignInCallback.js
+/src/components/User/NaverSignIn.js
+/src/components/User/NaverSignInCallback.js
 
 npm-debug.log*
 yarn-debug.log*

@@ -2,9 +2,41 @@ import { GithubAuthProvider, fetchSignInMethodsForEmail, linkWithCredential, sig
 import { auth, db } from "../../firebase";
 import { useNavigate } from "react-router-dom";
 import { collection, doc, getDocs, query, setDoc, where } from "firebase/firestore";
+import { useContext } from "react";
+import { MessageContext } from "../../contexts/MessageContext";
+import { UserContext } from "../../contexts/UserContext";
+import GithubLogo from "../../assets/GithubLogos/github-mark.svg"
+import styled from "styled-components";
 
-function GithubSignIn({ setUser }) {
+const Button = styled.button`
+    width: 100%;
+    font-size: 1rem;
+    /* color: white; */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    padding: 6px;
+    border: none;
+    border-radius: 100px;
+    box-shadow: 0 0 2px 0 black;
+    background-color: white;
+    cursor: pointer;
+    &:hover {
+        box-shadow: 0 0 3px 0 black;
+    };
+`;
+
+const Img = styled.img`
+    height: 25px;
+`;
+
+function GithubSignIn({ action }) {
     const navigate = useNavigate();
+    // 알림 메시지 추가
+    const { addMessage } = useContext(MessageContext);
+    // 현재 사용자 정보 저장
+    const { setSessionUser } = useContext(UserContext);
 
     const handleClick = () => {
         const provider = new GithubAuthProvider();
@@ -36,13 +68,14 @@ function GithubSignIn({ setUser }) {
                         displayName: user.displayName,
                         email: email,
                         loginMethods: [loginMethod],
+                        mealPlanIds: [],
                     };
                     await setDoc(docRef, userData);
                 };
                 // 로컬 스토리지에 사용자 정보 저장
-                delete userData.UID;
-                localStorage.setItem("user", JSON.stringify(userData));
-                setUser(userData);
+                sessionStorage.setItem("user", JSON.stringify(userData));
+                setSessionUser(userData);
+                addMessage("로그인 되었습니다.");
                 // 메인 페이지로 이동
                 navigate("/");
             }).catch(async (error) => {
@@ -56,6 +89,7 @@ function GithubSignIn({ setUser }) {
                 console.log("Error ", errorCode, ": ", errorMessage);
                 console.log("credential: ", credential);
                 // An error happened.
+                // 로그인하려는 이메일로 가입된 계정이 있는 경우
                 if (errorCode === 'auth/account-exists-with-different-credential') {
                     // 동일 이메일로 등록된 계정의 로그인 방법 확인
                     const collectionName = "users";
@@ -94,7 +128,9 @@ function GithubSignIn({ setUser }) {
     }
 
     return (
-        <button onClick={handleClick}>Github</button>
+        <Button onClick={handleClick}>
+            <Img src={GithubLogo} alt="Github logo" /> Github 계정으로 {action}하기
+        </Button>
     );
 }
 

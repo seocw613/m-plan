@@ -2,34 +2,70 @@ import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "fire
 import { auth, db } from "../../firebase";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
-import { useRef, useState } from "react";
+import { useContext, useRef, useState } from "react";
 import { collection, doc, getDoc, getDocs, query, setDoc, where } from "firebase/firestore";
-
-const EmailSignUpLayout = styled.div`
-`;
+import { MessageContext } from "../../contexts/MessageContext";
+import { UserContext } from "../../contexts/UserContext";
 
 const Form = styled.form`
-    display: inline-flex;
+    display: flex;
     flex-direction: column;
-    width: 300px;
-    input {
+    gap: 10px;
+    width: 400px;
+`;
+
+const Row = styled.div`
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 1.25rem;
+    & input {
+        width: 250px;
+        margin-left: 20px;
         font-size: 1rem;
-    }
+        padding: 6px 10px;
+        outline: none;
+        border: 1px solid gray;
+        border-radius: 6px;
+        background-color: white;
+    };
+`;
+
+const Button = styled.button`
+    font-size: 1.25rem;
+    padding: 6px;
+    border: none;
+    border-radius: 100px;
+    box-shadow: 0 0 2px 0 black;
+    background-color: white;
+    cursor: pointer;
+    &:hover {
+        box-shadow: 0 0 3px 0 black;
+    };
 `;
 
 const Message = styled.div`
+    font-size: 1.125rem;
+    line-height: 1.2rem;
+    text-align: center;
     overflow: wrap;
     word-break: keep-all;
+    white-space: pre-wrap;
     &.error_message {
         color: red;
     }
 `;
 
-
-function EmailSignUp({ setUser }) {
+function EmailSignUp() {
     const navigate = useNavigate();
+    // 회원가입 관련 안내 메시지
     const [message, setMessage] = useState();
+    // 회원가입 관련 오류 메시지
     const [errorMessage, setErrorMessage] = useState();
+    // 알림 메시지 추가
+    const { addMessage } = useContext(MessageContext);
+    // 현재 사용자 정보 저장
+    const { setSessionUser } = useContext(UserContext);
     // 모두 true여야 회원가입 가능
     let isEmailAccept = false;
     let isPasswordAccept = false;
@@ -40,11 +76,14 @@ function EmailSignUp({ setUser }) {
         const type = event.target.id;
         let content = "";
         switch (type) {
+            case "email":
+                content = "이메일 형식에 맞춰 작성해주세요.\n예시: sample@naver.com";
+                break;
             case "password":
-                content = "·비밀번호 생성 규칙: 6~16자의 영문, 숫자와 특수기호 (!, @, #, $, %, ^, &, *, ?, _)만 사용 가능합니다.";
+                content = "비밀번호는 6~16자의 영문, 숫자와 특수기호(!, @, #, $, %, ^, &, *, ?, _)의 사용 가능합니다.";
                 break;
             case "displayName":
-                content = "·닉네임 생성 규칙: 글자, 숫자로 시작하는 2~10자의 한글, 영문, 숫자와 특수기호 (_, -)만 사용 가능합니다.";
+                content = "닉네임은 문자, 숫자로 시작하는 2~10자의 한글, 영문, 숫자와 특수기호(_, -)의 사용 가능합니다.";
                 break;
             default:
                 break;
@@ -57,7 +96,7 @@ function EmailSignUp({ setUser }) {
         setMessage();
         // 공백 검사
         if (email === "") {
-            const content = "·이메일: 필수 정보입니다.";
+            const content = "이메일은 필수 정보입니다.";
             setErrorMessage(content);
             isEmailAccept = false;
             return;
@@ -65,7 +104,7 @@ function EmailSignUp({ setUser }) {
         // 정규표현식 검사
         const regex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9]+$/;
         if (!regex.test(email)) {
-            const content = "·이메일: 이메일 주소를 확인해 주세요.";
+            const content = "이메일은 이메일 주소를 확인해 주세요.";
             setErrorMessage(content);
             isEmailAccept = false;
             return;
@@ -75,7 +114,7 @@ function EmailSignUp({ setUser }) {
         const q = query(collection(db, collectionName), where("email", "==", email));
         const querySnapshot = await getDocs(q);
         if (querySnapshot.docs.length > 0) {
-            const content = "·이메일: 사용할 수 없는 이메일입니다. 본인의 이메일이 맞다면 다른 방식으로 회원가입 했는지 확인해보세요.";
+            const content = "사용할 수 없는 이메일입니다. 본인의 이메일이 맞다면 다른 방식으로 회원가입 했는지 확인해주세요.";
             setErrorMessage(content);
             isEmailAccept = false;
             return;
@@ -90,7 +129,7 @@ function EmailSignUp({ setUser }) {
         setMessage();
         // 공백 검사
         if (password === "") {
-            const content = "·비밀번호: 필수 정보입니다.";
+            const content = "비밀번호는 필수 정보입니다.";
             setErrorMessage(content);
             isPasswordAccept = false;
             return;
@@ -98,7 +137,7 @@ function EmailSignUp({ setUser }) {
         // 정규표현식 검사
         const regex = /^[a-zA-Z0-9!@#$%^&*?_]{6,16}$/;
         if (!regex.test(password)) {
-            const content = "·비밀번호: 생성 규칙을 확인해 주세요.";
+            const content = "비밀번호 생성 규칙을 확인해 주세요.";
             setErrorMessage(content);
             isPasswordAccept = false;
             return;
@@ -119,7 +158,7 @@ function EmailSignUp({ setUser }) {
         // 정규표현식 검사
         const regex = /^[a-zA-Zㄱ-힣0-9][a-zA-Zㄱ-힣0-9_-]{1,9}$/;
         if (!regex.test(displayName)) {
-            const content = "·닉네임: 생성 규칙을 확인해 주세요.";
+            const content = "닉네임 생성 규칙을 확인해 주세요.";
             setErrorMessage(content);
             isDisplayNameAccept = false;
             return;
@@ -129,7 +168,7 @@ function EmailSignUp({ setUser }) {
         const q = query(collection(db, collectionName), where("displayName", "==", displayName));
         const querySnapshot = await getDocs(q);
         if (querySnapshot.docs.length > 0) {
-            const content = "·닉네임: 사용할 수 없는 닉네임입니다.";
+            const content = "사용할 수 없는 닉네임입니다.";
             setErrorMessage(content);
             isDisplayNameAccept = false;
             return;
@@ -152,21 +191,21 @@ function EmailSignUp({ setUser }) {
         // 이메일 적합 여부 확인
         if (!isEmailAccept) {
             event.target.email.focus();
-            const content = "·이메일: 생성 규칙을 확인해주세요.";
+            const content = "이메일 생성 규칙을 확인해주세요.";
             setErrorMessage(content);
             return;
         };
         // 비밀번호 적합 여부 확인
         if (!isPasswordAccept) {
             event.target.password.focus();
-            const content = "·비밀번호: 생성 규칙을 확인해주세요.";
+            const content = "비밀번호 생성 규칙을 확인해주세요.";
             setErrorMessage(content);
             return;
         };
         // 닉네임 적합 여부 확인
         if (!isDisplayNameAccept) {
             event.target.displayName.focus();
-            const content = "·닉네임: 생성 규칙을 확인해주세요.";
+            const content = "닉네임 생성 규칙을 확인해주세요.";
             setErrorMessage(content);
             return;
         };
@@ -188,14 +227,15 @@ function EmailSignUp({ setUser }) {
                     displayName: displayName,
                     email: email,
                     loginMethods: [loginMethod],
+                    mealPlanIds: [],
                 };
                 await setDoc(docRef, userData);
 
-                alert("회원가입 되었습니다.");
+                addMessage("회원가입 되었습니다.");
                 // 로컬 스토리지에 사용자 정보 저장
                 delete userData.UID;
-                localStorage.setItem("user", JSON.stringify(userData));
-                setUser(userData);
+                sessionStorage.setItem("user", JSON.stringify(userData));
+                setSessionUser(userData);
                 // 로그인 페이지로 이동
                 navigate("/");
             })
@@ -205,34 +245,39 @@ function EmailSignUp({ setUser }) {
     };
 
     return (
-        <EmailSignUpLayout>
-            <Form onSubmit={handleSubmit} >
+        <Form onSubmit={handleSubmit} >
+            <Row>
+                <span>이메일</span>
                 <input
                     name="email"
                     id="email"
-                    placeholder="이메일"
+                    onFocus={handleFocus}
                     onBlur={(event) => handleEmailBlur(event.target.value)}
                     autocomplete='off' />
+            </Row>
+            <Row>
+                <span>비밀번호</span>
                 <input
                     name="password"
                     id="password"
-                    placeholder="비밀번호"
                     onFocus={handleFocus}
                     onBlur={(event) => handlePasswordBlur(event.target.value)}
                     type="password"
                     autocomplete='off' />
+            </Row>
+            <Row>
+                <span>닉네임(선택)</span>
                 <input
                     name="displayName"
                     id="displayName"
-                    placeholder="(선택)닉네임"
                     onFocus={handleFocus}
                     onBlur={(event) => handleDisplayNameBlur(event.target.value)}
                     autocomplete='off' />
-                <Message>{message}</Message>
-                <Message className="error_message">{errorMessage}</Message>
-                <button>회원가입</button>
-            </Form>
-        </EmailSignUpLayout>
+            </Row>
+            <Button>회원가입</Button>
+            <Message>{message}</Message>
+            <Message className="error_message">{errorMessage}</Message>
+        </Form>
     );
 };
 

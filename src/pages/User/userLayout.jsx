@@ -1,10 +1,9 @@
+import { useContext } from "react";
 import { Outlet, useOutletContext } from "react-router-dom";
+import { UserContext } from "../../contexts/UserContext";
 
 function UserLayout() {
-    // OutletContext
-    const context = useOutletContext();
-    // 사용자 정보 저장 함수
-    const setUser = context.setUser;
+    const { setUser } = useContext(UserContext);
 
     return (
         <div>

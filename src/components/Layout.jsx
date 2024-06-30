@@ -1,11 +1,18 @@
 import axios from "axios";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { Link, Outlet, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { auth, db } from "../firebase";
 import { AuthCredential, signOut } from "firebase/auth";
-import GithubLink from "./User/githubLink";
+import GithubLink from "./User/GithubLink";
 import { collection, getDocs, query, where } from "firebase/firestore";
+import { MessageContext } from "../contexts/MessageContext";
+import { UserContext } from "../contexts/UserContext";
+import { MealPlanContext } from "../contexts/MealPlanContext";
+import { useMessage } from "../hooks/useMessage";
+import { useUser } from "../hooks/useUser";
+import { useMealPlan } from "../hooks/useMealPlan";
+import MessageBox from "./Common/MessageBox";
 
 const Wrapper = styled.nav``;
 
@@ -17,28 +24,32 @@ function Layout() {
     // 검색된 식품 정보
     const [foodDatas, setFoodDatas] = useState();
 
+    // 알림 메시지 추가
+    const { addMessage } = useContext(MessageContext);
+    // 사용자의 DB 정보, 현재 사용자 정보 삭제
+    const { user, removeSessionUser } = useContext(UserContext);
+    // 식단 목록 가져오기
+    const { getMealPlanDatas } = useContext(MealPlanContext);
+
     // 현재 페이지 번호
+    // 새로고침 해도 페이지 유지될 수 있게 세션 스토리지 이용
     const [page, setPage] = useState(() => {
         const savedPage = sessionStorage.getItem("page");
         return savedPage ? JSON.parse(savedPage) : 1;
     });
 
-    // 사용자의 db 정보
-    const [user, setUser] = useState(JSON.parse(localStorage.getItem("user")));
-
     // 사용자 정보 확인
     const handleCheckUserClick = () => {
-        console.log("user:", auth.currentUser);
-        console.log("UID:", auth.currentUser.uid);
-        console.log("credential:", new AuthCredential());
+        addMessage(`user: ${auth.currentUser.email}`);
     };
 
     // 로그아웃
     const handleSignOutClick = () => {
         signOut(auth).then(() => {
-            alert("로그아웃 되었습니다.");
-            localStorage.removeItem("user");
-            setUser();
+            // 로그아웃
+            removeSessionUser();
+            // 메시지 띄우기
+            addMessage("로그아웃 되었습니다.");
             navigate("/");
         }).catch((error) => {
             const errorCode = error.code;
@@ -71,15 +82,16 @@ function Layout() {
             .catch((error) => {
                 console.error("Error fetching JSON files:", error);
             });
-        // 로그인된 사용자 정보 가져오기
-        console.log("rendered");
-        console.log("auth user:", auth.currentUser);
-        console.log("user:", user);
     }, []);
 
     useEffect(() => {
         setFoodDatas(originalFoodDatas);
     }, [originalFoodDatas]);
+
+    useEffect(() => {
+        // 사용자 정보가 바뀔 때마다 식단 목록 최신화
+        getMealPlanDatas(user);
+    }, [user]);
 
     // 세션스토리지에 페이지 번호 저장
     const setSessionPage = (num) => {
@@ -89,10 +101,13 @@ function Layout() {
 
     return (
         <Wrapper>
+            <MessageBox />
             <nav>
                 <Link to="/">Main Page</Link>{"\t"}
                 <Link to="/food/">Food</Link>{"\t"}
-                <Link to="/mealPlan/">Meal Plan</Link>{"\t"}
+                {user &&
+                    <Link to="/mealPlan/">Meal Plan</Link>
+                }
                 {user
                     ? null
                     : <>
@@ -101,8 +116,8 @@ function Layout() {
                     </>
                 }
             </nav>
-            {user
-                ? <div>
+            {user &&
+                <div>
                     <button onClick={handleCheckUserClick}>사용자 정보</button>
                     {user?.loginMethods?.some((method) => method === "github")
                         ? null
@@ -110,11 +125,10 @@ function Layout() {
                     }
                     <button onClick={handleSignOutClick}>로그아웃</button>
                 </div>
-                : null
             }
-            <Outlet context={{ originalFoodDatas, foodDatas, page, setFoodDatas, setSessionPage, setUser }} />
+            <Outlet context={{ originalFoodDatas, foodDatas, page, setFoodDatas, setSessionPage }} />
         </Wrapper>
     );
-}
+};
 
 export default Layout;

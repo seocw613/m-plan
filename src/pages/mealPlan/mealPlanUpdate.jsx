@@ -1,8 +1,10 @@
 import { collection, doc, getDocs, setDoc } from "firebase/firestore";
-import { useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate, useOutletContext, useParams } from "react-router-dom";
 import styled from "styled-components";
 import { db } from "../../firebase";
+import { MessageContext } from "../../contexts/MessageContext";
+import { MealPlanContext } from "../../contexts/MealPlanContext";
 
 const FoodListContainer = styled.div`
     display: flex;
@@ -63,10 +65,11 @@ function MealPlanUpdate() {
     const context = useOutletContext();
     // 검색된 식품 정보
     const originalFoodDatas = context.originalFoodDatas;
-    // 식단 목록
-    const mealPlanDatas = context.mealPlanDatas;
-    // 식단 목록 업데이트
-    const getMealPlanDatas = context.getMealPlanDatas;
+
+    // 알림 메시지 추가
+    const { addMessage } = useContext(MessageContext);
+    // 식단 목록, 업데이트 함수
+    const { mealPlanDatas, getMealPlanDatas } = useContext(MealPlanContext);
     // 식단 정보
     const [mealPlan, setMealPlan] = useState();
 
@@ -86,7 +89,7 @@ function MealPlanUpdate() {
         const value = event.target.value;
 
         if (value.length > 20) {
-            alert("식단 이름은 20글자를 초과할 수 없습니다.");
+            addMessage("식단 이름은 20글자를 초과할 수 없습니다.");
             mealPlanNameRef.current.value = value.slice(0, 20);
         };
     };
@@ -164,7 +167,7 @@ function MealPlanUpdate() {
             && mealPlanData.id !== mealPlan.id
         ));
         if (isExist) {
-            alert("이미 등록된 식단 이름입니다.");
+            addMessage("이미 등록된 식단 이름입니다.");
             mealPlanNameRef.current.focus();
             return;
         };

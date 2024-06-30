@@ -10,8 +10,8 @@ function FoodLayout() {
 
     const originalFoodDatas = context.originalFoodDatas;
     const foodDatas = context.foodDatas;
-    const page = context.page;
     const setFoodDatas = context.setFoodDatas;
+    const page = context.page;
     const setSessionPage = context.setSessionPage;
 
     return (

@@ -118,7 +118,7 @@ function Pagination({ foodDatas, limit, page, setSessionPage }) {
 
     // 클릭한 페이지로 이동
     const handlePageChange = (event) => {
-        setSessionPage(event.target.value)
+        setSessionPage(event.target.value);
     };
 
     // 이전 페이지 리스트로 이동

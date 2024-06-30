@@ -1,8 +1,10 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { db } from "../../firebase.jsx";
 import { collection, deleteDoc, doc, getDoc, getDocs, setDoc } from "firebase/firestore";
 import styled from "styled-components";
 import { Link, useNavigate, useOutletContext } from "react-router-dom";
+import { MealPlanContext } from "../../contexts/MealPlanContext.js";
+import { UserContext } from "../../contexts/UserContext.js";
 
 const MealPlanListLayout = styled.div`
     margin: 20px;
@@ -59,9 +61,8 @@ function MealPlanList() {
     // 검색된 식품 정보
     const originalFoodDatas = context.originalFoodDatas;
     // 식단 목록
-    const mealPlanDatas = context.mealPlanDatas;
-    // 식단 목록 가져오기
-    const getMealPlanDatas = context.getMealPlanDatas;
+    const { mealPlanDatas, getMealPlanDatas } = useContext(MealPlanContext);
+    const { user, setSessionUser } = useContext(UserContext);
 
     // 해당 식단에서 특정 영양성분의 합계를 구해준다
     const getNutrientSummary = (mealPlan, nutirient) => {
@@ -70,7 +71,7 @@ function MealPlanList() {
                 if (foodData.id == food.id) return foodData;
             };
         });
-        
+
         const summary = foodDatas.reduce((accumulator, foodData) => {
             const food = mealPlan.foods.find((food) => food.id == foodData.id);
             return accumulator + (foodData[nutirient] / 100 * food.size);
@@ -83,11 +84,15 @@ function MealPlanList() {
     const deleteMealPlan = async (mealPlan) => {
         if (!window.confirm("식단을 삭제하시겠습니까?")) return;
 
-        const collectionName = "mealPlans";
-        
-        const docRef = doc(db, collectionName, mealPlan.id);
-        await deleteDoc(docRef);
-        
+        // DB에서 식단 삭제
+        const mealPlanCollectionName = "mealPlans";
+        await deleteDoc(doc(db, mealPlanCollectionName, mealPlan.id));
+        // 사용자 DB에서 해당 식단 id 삭제
+        const userCollectionName = "users";
+        const mealPlanIds = user.mealPlanIds.filter((mealPlanId) => mealPlanId !== mealPlan.id);
+        setSessionUser({ ...user, mealPlanIds: mealPlanIds });
+        await setDoc(doc(db, userCollectionName, user.UID), user);
+
         getMealPlanDatas();
     };
 
@@ -104,8 +109,8 @@ function MealPlanList() {
                     <Nutrients>지방(g)</Nutrients>
                 </NutrientsContainer>
             </MealPlanContainer>
-            {mealPlanDatas &&
-                mealPlanDatas.map((mealPlan) => (
+            {mealPlanDatas.length > 0
+                ? mealPlanDatas.map((mealPlan) => (
                     <MealPlanContainer key={mealPlan.id}>
                         <MealPlanTitle>
                             <Name>
@@ -131,6 +136,7 @@ function MealPlanList() {
                         <button onClick={() => deleteMealPlan(mealPlan)}>삭제</button>
                     </MealPlanContainer>
                 ))
+                : <span>no datas</span>
             }
         </MealPlanListLayout>
     )
